@@ -1,0 +1,106 @@
+<div class="container mt-4">
+  <div class="col-12">
+    <h1>Users Management</h1>
+
+    <div class="mb-3">
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="searchText"
+        placeholder="Search by email"
+        (input)="onSearchChange()"
+      />
+    </div>
+
+    @if (loading) {
+      <div class="text-center p-5">
+        <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+        <p>Loading users...</p>
+      </div>
+    } @else {
+      <p-table
+        [value]="filteredUsers"
+        [paginator]="true"
+        [rows]="5"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
+        [rowsPerPageOptions]="[5, 10]"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="userEmail">
+              User Email <p-sortIcon field="userEmail"></p-sortIcon>
+            </th>
+            <th pSortableColumn="role">
+              Role <p-sortIcon field="role"></p-sortIcon>
+            </th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td>{{ user.userEmail || user.email }}</td>
+            <td>
+              <span
+                [ngClass]="{
+                  'badge bg-primary': user.role === 'Admin',
+                  'badge bg-secondary': user.role !== 'Admin'
+                }"
+              >
+                {{ user.role }}
+              </span>
+            </td>
+            <td>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger p-button-sm"
+                (click)="confirmDelete(user.userEmail)"
+                [disabled]="user.role === 'Admin'"
+                pTooltip="Delete user"
+                tooltipPosition="top"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3" class="text-center py-4">
+              {{
+                users.length === 0
+                  ? "No users available"
+                  : "No users match your search criteria"
+              }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+
+    <p-confirmDialog
+      [style]="{ width: '450px' }"
+      [baseZIndex]="10000"
+      styleClass="custom-confirm-dialog"
+    >
+    </p-confirmDialog>
+
+    <p-dialog
+      header="Error"
+      [(visible)]="visibleError"
+      [style]="{ width: '450px' }"
+      [modal]="true"
+    >
+      <p class="m-0">{{ errorMessage }}</p>
+      <ng-template pTemplate="footer">
+        <button
+          pButton
+          label="OK"
+          icon="pi pi-check"
+          (click)="visibleError = false"
+          class="p-button-text"
+        ></button>
+      </ng-template>
+    </p-dialog>
+  </div>
+</div>

@@ -1,0 +1,88 @@
+<div class="text-center">
+  <form #fLogin="ngForm" (ngSubmit)="login()" class="form-signin">
+    <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+
+    <div class="form-group">
+      <label for="userEmail" class="sr-only">Email</label>
+      <input
+        type="email"
+        class="form-control"
+        placeholder="Email"
+        [(ngModel)]="infoLogin.userEmail"
+        name="userEmail"
+        id="userEmail"
+        #userEmail="ngModel"
+        required
+        email
+        [ngClass]="{'is-invalid': userEmail.invalid && (userEmail.dirty || userEmail.touched)}"
+      >
+      @if (userEmail.invalid && (userEmail.dirty || userEmail.touched)) {
+        <div class="invalid-feedback">
+          @if (userEmail.errors?.['required']) {
+            <div>Email is required</div>
+          }
+          @if (userEmail.errors?.['email']) {
+            <div>Please enter a valid email address</div>
+          }
+        </div>
+      }
+    </div>
+    
+    <div class="form-group mt-3">
+      <label for="password" class="sr-only">Password</label>
+      <input
+        type="password"
+        class="form-control"
+        placeholder="Password"
+        [(ngModel)]="infoLogin.password"
+        name="password"
+        id="password"
+        #password="ngModel"
+        required
+        minlength="6"
+        [ngClass]="{'is-invalid': password.invalid && (password.dirty || password.touched)}"
+      >
+      @if (password.invalid && (password.dirty || password.touched)) {
+        <div class="invalid-feedback">
+          @if (password.errors?.['required']) {
+            <div>Password is required</div>
+          }
+          @if (password.errors?.['minlength']) {
+            <div>The password must have at least 6 characters</div>
+          }
+        </div>
+      }
+    </div>
+    
+    <button 
+      type="submit" 
+      class="btn btn-grey mt-3"
+      [disabled]="!fLogin.form.valid"
+      [ngStyle]="{
+        'cursor': fLogin.form.valid ? 'pointer' : 'not-allowed',
+        'opacity': fLogin.form.valid ? '1' : '0.6'
+      }"
+    >
+      Login
+    </button>
+    <div class="container my-2 px-2">
+      <div class="d-flex align-items-center">
+        <img
+          src="https://imgur.com/xrlzPt5.png"
+          alt="Logo"
+          width="70"
+          height="50"
+          class="me-2"
+        />
+        <h1 class="mb-0">eCommerceDs</h1>
+      </div>
+    </div>
+  </form>
+  <div class="mt-3">
+    <p>
+      Don't have an account?
+      <a [routerLink]="['/register']" class="link-grey">Register here</a>
+    </p>
+  </div>
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,123 @@
+<div class="container my-2 px-2">
+  <div class="row mt-4 mx-3">
+    <div class="col-9">
+      <div class="mb-3">
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          (ngModelChange)="onSearchChange()"
+          class="form-control"
+          placeholder="Search by title or year"
+        />
+      </div>
+      @if (!isLoggedIn()) {
+      <div class="alert alert-warning p-2 ml-2">
+        <small>Sign in to interact with the cart</small>
+      </div>
+      }
+      <p-table
+        [value]="filteredRecords"
+        [paginator]="true"
+        [rows]="5"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        currentPageReportTemplate="{first} of {last} of a total of {totalRecords} records"
+        [rowsPerPageOptions]="[5, 10]"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th></th>
+            <th style="font-size: 15px" pSortableColumn="titleRecord">
+              Title <p-sortIcon field="titleRecord"></p-sortIcon>
+            </th>
+            <th style="font-size: 15px" pSortableColumn="groupName">
+              Group <p-sortIcon field="groupName"></p-sortIcon>
+            </th>
+            <th style="font-size: 15px" pSortableColumn="yearOfPublication">
+              Year <p-sortIcon field="yearOfPublication"></p-sortIcon>
+            </th>
+            <th style="font-size: 15px">Price</th>
+            <th style="font-size: 15px">Stock</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-record>
+          <tr>
+            <td>
+              <img
+                [src]="record.ImageRecord"
+                width="80"
+                [alt]="record.TitleRecord"
+              />
+            </td>
+            <td style="font-size: 14px">{{ record.TitleRecord }}</td>
+            <td style="font-size: 14px">{{ record.GroupName }}</td>
+            <td>{{ record.YearOfPublication }}</td>
+            <td>{{ record.Price }}</td>
+            <td>{{ record.stock }}</td>
+            <td>
+              @if (!isAdmin()) {
+              <div style="display: flex; gap: 8px">
+                <p-button
+                  icon="pi pi-eye"
+                  (click)="showImage(record)"
+                  [disabled]="!record.ImageRecord"
+                  [pTooltip]="!record.ImageRecord ? 'No image available' : 'View image'"
+                  tooltipPosition="top"
+                  styleClass="p-button-rounded p-button-secondary"
+                ></p-button>
+                <p-button
+                  label="Add"
+                  icon="pi pi-shopping-cart"
+                  (click)="onAddToCart($event, record)"
+                  styleClass="p-button-rounded p-button-secondary"
+                  [ngClass]="{
+                      'p-button-success': isLoggedIn() && cartEnabled && record.stock > 0,
+                      'p-button-secondary': !isLoggedIn() || !cartEnabled || record.stock <= 0
+                    }"
+                  [disabled]="
+                    !isLoggedIn() ||
+                    !cartEnabled ||
+                    record.stock <= 0 ||
+                    isAddingToCart
+                  "
+                ></p-button>
+
+                <p-button
+                  label="Remove"
+                  icon="pi pi-trash"
+                  (click)="removeRecord(record)"
+                  styleClass="p-button-rounded p-button-secondary"
+                  [ngClass]="{
+                      'p-button-danger': isLoggedIn() && cartEnabled && record.inCart,
+                      'p-button-secondary': !isLoggedIn() || !cartEnabled || !record.inCart
+                    }"
+                  [disabled]="!isLoggedIn() || !cartEnabled || !record.inCart || record.Amount <= 0"
+                  [pTooltip]="!isLoggedIn() ? 'Please log in' : !cartEnabled ? 'Cart is disabled' : !record.inCart || record.Amount <= 0 ? 'Not in cart' : 'Remove from cart'"
+                  tooltipPosition="top"
+                ></p-button>
+              </div>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <p-confirmDialog></p-confirmDialog>
+      <p-dialog
+        header="Alert"
+        [(visible)]="visibleError"
+        [style]="{ width: '50vw' }"
+      >
+        <p>{{ errorMessage }}</p>
+      </p-dialog>
+      <p-dialog [(visible)]="visiblePhoto" [style]="{ width: '35vw' }">
+        <ng-template pTemplate="header">
+          <span class="header-text"
+            >{{ record.GroupName }}<br />{{ record.TitleRecord }}<br />{{
+            record.Price }}€</span
+          >
+        </ng-template>
+        <img [src]="photo" alt="Photo of the record" class="img-fluid" />
+      </p-dialog>
+    </div>
+  </div>
+</div>

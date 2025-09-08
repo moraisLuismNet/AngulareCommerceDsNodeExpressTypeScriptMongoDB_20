@@ -1,0 +1,141 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <!-- Admin navigation links -->
+      @if (isAdmin()) {
+      <ul
+        class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll"
+        style="--bs-scroll-height: 100px"
+      >
+        <li class="nav-item">
+          @if (!isGenresPage()) {
+          <a class="nav-link" routerLink="/genres">MUSIC GENRES</a>
+          }
+        </li>
+        <li class="nav-item">
+          @if (!isGroupsPage()) {
+          <a class="nav-link" routerLink="/groups">GROUPS</a>
+          }
+        </li>
+        <li class="nav-item">
+          @if (!isRecordsPage()) {
+          <a class="nav-link" routerLink="/records">RECORDS</a>
+          }
+        </li>
+        @if (!isListGroupsPage()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/listgroups">MUSIC GROUPS</a>
+          </li>
+        }
+        @if (!isCartsPage()) {
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/carts">CARTS</a>
+        </li>
+        }
+        @if (!isOrdersPage()) {
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/admin-orders">ORDERS</a>
+        </li>
+        }
+        @if (!isUsersPage()) {
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/users">USERS</a>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- Regular user navigation links - Only show for non-admin users -->
+      @if (emailUser && !isAdmin()) {
+        <ul
+          class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll"
+          style="--bs-scroll-height: 100px"
+        >
+          @if (!isListGroupsPage()) {
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/listgroups">MUSIC GROUPS</a>
+            </li>
+          }
+          @if (!isOrdersPage()) {
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/orders">ORDERS</a>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- User section -->
+      <ul class="navbar-nav">
+        @if (emailUser) {
+          <li class="me-3">Welcome, {{ emailUser }}</li>
+        }
+        @if (isAdmin()) {
+          <li class="me-3">ADMIN</li>
+        }
+
+        @if (emailUser) {
+          <li>
+            <button class="btn btn-outline-primary me-2" (click)="logout()">
+              Log out
+            </button>
+          </li>
+        } @else {
+          @if (!isLoginPage()) {
+            <li>
+              <button
+                class="btn btn-outline-primary me-2"
+                routerLink="/login"
+              >
+                Log in</button>
+            </li>
+          } @else {
+            <li>
+              <button
+                class="btn btn-outline-primary me-2"
+                routerLink="/listgroups"
+              >
+              View groups
+              </button>
+            </li>
+          }
+        }
+      </ul>
+
+      <!-- Shopping cart icon and total -->
+      @if (emailUser && !isAdmin()) {
+        <div class="me-3 d-flex align-items-center">
+          <div class="cart-icon-container me-2">
+            <i
+              class="pi pi-shopping-cart"
+              [ngClass]="{ 'text-muted': cartItemsCount > 0 }"
+              [routerLink]="cartItemsCount > 0 ? '/cart-details' : null"
+              [ngStyle]="{
+                'font-size': '1.5em',
+                cursor: cartItemsCount > 0 ? 'pointer' : 'not-allowed'
+              }"
+            ></i>
+            @if (cartItemsCount > 0) {
+              <span class="badge bg-primary">{{ cartItemsCount }}</span>
+            }
+          </div>
+          @if (cartTotal > 0) {
+            <div class="cart-total">
+              <strong>{{ cartTotal | number : "1.2-2" }}€</strong>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</nav>

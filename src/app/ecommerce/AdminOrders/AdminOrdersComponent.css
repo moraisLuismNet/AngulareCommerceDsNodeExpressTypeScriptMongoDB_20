@@ -1,0 +1,36 @@
+/* Style for the details container */
+.order-details-container {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Style for the details table */
+.table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Style for the expansion button */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.2rem;
+}
+
+/* Smooth transition for the icon */
+.pi {
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Adjust table columns */
+.align-right-cell {
+  text-align: right;
+  padding-right: 1.5rem;
+}
+
+/* Adjust table columns */
+.align-right-cell .btn {
+  margin-left: auto;
+}

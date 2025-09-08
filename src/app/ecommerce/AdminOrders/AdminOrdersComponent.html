@@ -1,0 +1,114 @@
+<div class="container mt-4">
+  <h2>Orders Management</h2>
+  <div class="mb-3">
+    <input
+      type="text"
+      class="form-control"
+      [(ngModel)]="searchText"
+      placeholder="Search by email, payment method or date"
+      (input)="onSearchChange()"
+    />
+  </div>
+
+  @if (loading) {
+    <div class="loading-spinner">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+  
+  @if (!loading && filteredOrders.length > 0) {
+  <p-table
+    [value]="filteredOrders"
+    [paginator]="true"
+    [rows]="5"
+    [showCurrentPageReport]="true"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} orders"
+    [rowsPerPageOptions]="[5, 10]"
+    dataKey="idOrder"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Order ID</th>
+        <th>Email</th>
+        <th>Date</th>
+        <th>Payment Method</th>
+        <th>Total</th>
+        <th>Order Details</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-order>
+      <tr>
+        <td>{{ order.IdOrder }}</td>
+        <td>{{ order.UserEmail }}</td>
+        <td>{{ order.OrderDate | date : "medium" }}</td>
+        <td>{{ order.PaymentMethod }}</td>
+        <td>{{ order.Total | number : "1.2-2" }} €</td>
+        <td class="align-right-cell">
+          <button
+            class="btn btn-sm"
+            [ngClass]="{
+              'btn-info': !isOrderExpanded(order.idOrder),
+              'btn-secondary': isOrderExpanded(order.idOrder)
+            }"
+            (click)="toggleOrderDetails(order.idOrder)"
+          >
+            <i
+              class="pi"
+              [ngClass]="{
+                'pi-chevron-down': !isOrderExpanded(order.idOrder),
+                'pi-chevron-up': isOrderExpanded(order.idOrder)
+              }"
+            ></i>
+          </button>
+        </td>
+      </tr>
+      @if (isOrderExpanded(order.idOrder)) {
+      <tr [pRowToggler]="order">
+        <td colspan="6" class="p-0">
+          <div class="order-details-container p-3">
+            <h5 class="mb-3">Order Details</h5>
+            <h6>Records:</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th>Title</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (order.OrderDetails && order.OrderDetails.length > 0) {
+                    @for (item of order.OrderDetails; track item.IdOrderDetail || $index) {
+                    <tr>
+                      <td>{{ item.RecordTitle || 'No title' }}</td>
+                      <td>{{ (item.Price || 0) | number : "1.2-2" }} €</td>
+                      <td>{{ item.Amount || 0 }}</td>
+                      <td>{{ (item.Total || 0) | number : "1.2-2" }} €</td>
+                    </tr>
+                    }
+                  } @else {
+                    <tr>
+                      <td colspan="4" class="text-center">No hay detalles disponibles para esta orden</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </td>
+      </tr>
+      }
+    </ng-template>
+  </p-table>
+  } @else if (!loading) {
+    <div class="alert alert-info">
+      No orders found matching your criteria
+    </div>
+  }
+</div>

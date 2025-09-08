@@ -1,0 +1,108 @@
+<div class="container my-2 px-2">
+  <div class="row mt-4">
+    <div class="col-4">
+      <h1>Add Music Genre</h1>
+      <form #form="ngForm" (submit)="save()">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+            type="text"
+            class="form-control"
+            name="name"
+            [(ngModel)]="genre.NameMusicGenre"
+            required
+            #name="ngModel"
+            id="name"
+            placeholder="Name Required"
+          />
+          @if (!name.valid && name.touched) {
+            <span class="form-text text-danger">
+              Name Required
+            </span>
+          }
+        </div>
+        <div class="d-flex gap-2 mt-2">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="form.invalid"
+          >
+            Accept
+          </button>
+          @if (genre.IdMusicGenre !== 0) {
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="cancelEdition()"
+            >
+              Cancel edition
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+    <div class="col-8">
+      <div class="mb-3">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="searchTerm"
+          placeholder="Search by name"
+          (input)="filterGenres()"
+        />
+      </div>
+      <p-table
+        [value]="filteredGenres"
+        [paginator]="true"
+        [rows]="5"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        currentPageReportTemplate="{first} of {last} of a total of {totalRecords} genres"
+        [rowsPerPageOptions]="[5, 10]"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="nameMusicGenre">
+              Name <p-sortIcon field="nameMusicGenre"></p-sortIcon>
+            </th>
+            <th pSortableColumn="totalGroups">
+              Total Groups <p-sortIcon field="totalGroups"></p-sortIcon>
+            </th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-genre>
+          <tr>
+            <td>{{ genre.NameMusicGenre }}</td>
+            <td>
+              {{ genre.TotalGroups }}
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.2rem">
+                <p-button
+                  icon="pi pi-pencil"
+                  (click)="edit(genre)"
+                  styleClass="p-button-rounded p-button-warning"
+                ></p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  (click)="confirmDelete(genre)"
+                  styleClass="p-button-rounded p-button-danger"
+                  [disabled]="genre.totalGroups > 0"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <p-confirmDialog></p-confirmDialog>
+      <p-dialog
+        header="Alert"
+        [(visible)]="visibleError"
+        class="error-dialog"
+      >
+        <p>{{ errorMessage }}</p>
+      </p-dialog>
+    </div>
+  </div>
+</div>

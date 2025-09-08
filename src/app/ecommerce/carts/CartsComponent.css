@@ -1,0 +1,10 @@
+/* Button styles */
+
+button.p-button-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+button.p-button-sm .pi {
+  font-size: 0.875rem;
+}

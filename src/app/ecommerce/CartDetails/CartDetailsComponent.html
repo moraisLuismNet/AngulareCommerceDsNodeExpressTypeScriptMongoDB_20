@@ -1,0 +1,88 @@
+<div class="row mt-4 mx-3">
+  <div class="col-9 mx-auto">
+    <h1>Cart Details {{ isViewingAsAdmin ? "(Admin View)" : "" }}</h1>
+   
+    @if (loading) {
+      <div class="loading-spinner">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }
+
+    @if (!loading && filteredCartDetails.length > 0) {
+      <p-table
+        [value]="filteredCartDetails"
+        [paginator]="true"
+        [rows]="5"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        currentPageReportTemplate="{first} Of {last} of the total of {totalRecords} cartDetails"
+        [rowsPerPageOptions]="[5, 10]"
+      >
+      <ng-template pTemplate="header">
+        <tr>
+          <th></th>
+          <th>Group</th>
+          <th>Title</th>
+          <th>Amount</th>
+          <th>Price</th>
+          <th>Total</th>
+          @if (!isViewingAsAdmin) {
+            <th></th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-detail>
+        <tr>
+          <td><img [src]="detail.imageRecord" width="80" /></td>
+          <td>{{ detail.GroupName || "N/A" }}</td>
+          <td>{{ detail.titleRecord || 'No title available' }}</td>
+          <td>{{ detail.amount }}</td>
+          <td>{{ detail.price | number : "1.2-2" }} €</td>
+          <td>{{ detail.total | number : "1.2-2" }} €</td>
+          @if (!isViewingAsAdmin) {
+            <td>
+              <div class="d-flex gap-2 align-items-center">
+                <p-button
+                  label="Add"
+                  icon="pi pi-shopping-cart"
+                  (click)="addToCart(detail)"
+                  styleClass="p-button-rounded p-button-secondary"
+                  [disabled]="shouldDisableAddButton(detail)"
+                ></p-button>
+                <p-button
+                  label="Remove"
+                  icon="pi pi-trash"
+                  (click)="removeRecord(detail)"
+                  styleClass="p-button-rounded p-button-secondary"
+                  [disabled]="!detail.amount"
+                ></p-button>
+              </div>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      </p-table>
+      <div class="row mt-4 mx-3">
+        <div class="col-9 mx-auto">
+          @if (!isViewingAsAdmin && filteredCartDetails.length > 0) {
+            <div class="d-flex justify-content-center mt-4">
+              <p-button
+                label="Buy"
+                icon="pi pi-credit-card"
+                (click)="createOrder()"
+                [disabled]="isCreatingOrder"
+                styleClass="p-button-success"
+              >
+              </p-button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    @if (filteredCartDetails.length === 0) {
+      <p>There are no products in the cart</p>
+    }
+  </div>
+</div>
