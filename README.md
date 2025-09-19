@@ -80,8 +80,8 @@ AngulareCommerceDsNodeExpressTypeScriptMongoDB_20/
 ├───environments/  
 │   ├───environment.development.ts  
 │   └───environment.ts  
-├───main.ts   
-├───angular.json 
+├───main.ts     
+├───angular.json   
 └───package.json  
 
 ![AngulareCommderceDs](img/01.png)
