@@ -118,18 +118,25 @@ export class ListrecordsComponent implements OnInit {
     this.setupIntersectionObserver();
   }
 
-  ngOnInit(): void {
-    // Initialize cart status first
-    this.cartEnabled = true; // Default to enabled while checking
+  isLoggedIn(): boolean {
+    return this.authGuard.isLoggedIn();
+  }
 
-    // Only configure subscriptions if the user is authenticated
-    if (this.authGuard.isLoggedIn()) {
+  ngOnInit(): void {
+    // Initialize cart status based on authentication
+    const isLoggedIn = this.authGuard.isLoggedIn();
+    this.cartEnabled = isLoggedIn;
+    
+    if (isLoggedIn) {
       const user = this.authGuard.getUser();
       this.userEmail = user?.email || null;
       this.setupSubscriptions();
       this.checkCartStatus();
     } else {
+      // Explicitly set cart as disabled for non-logged in users
+      this.cartEnabled = false;
       this.cartService.cartEnabledSubject.next(false);
+      this.cdr.detectChanges(); // Trigger change detection
     }
 
     // Load records after setting up cart status
@@ -278,10 +285,6 @@ export class ListrecordsComponent implements OnInit {
       message: 'Are you sure you want to continue?',
       accept: () => {},
     });
-  }
-
-  isLoggedIn(): boolean {
-    return !!sessionStorage.getItem('user');
   }
 
   loadRecords(idGroup: string): void {

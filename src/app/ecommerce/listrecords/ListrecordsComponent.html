@@ -11,9 +11,9 @@
         />
       </div>
       @if (!isLoggedIn()) {
-      <div class="alert alert-warning p-2 ml-2">
-        <small>Sign in to interact with the cart</small>
-      </div>
+        <div class="alert alert-warning p-2 ml-2">
+          <small>Sign in to interact with the cart</small>
+        </div>
       }
       <p-table
         [value]="filteredRecords"
@@ -70,16 +70,11 @@
                   icon="pi pi-shopping-cart"
                   (click)="onAddToCart($event, record)"
                   styleClass="p-button-rounded p-button-secondary"
-                  [ngClass]="{
-                      'p-button-success': isLoggedIn() && cartEnabled && record.stock > 0,
-                      'p-button-secondary': !isLoggedIn() || !cartEnabled || record.stock <= 0
-                    }"
-                  [disabled]="
-                    !isLoggedIn() ||
-                    !cartEnabled ||
-                    record.stock <= 0 ||
-                    isAddingToCart
-                  "
+                  [disabled]="!isLoggedIn() || !cartEnabled || record.stock <= 0 || isAddingToCart"
+                  [pTooltip]="!isLoggedIn() ? 'Por favor inicia sesión para agregar al carrito' : 
+                                !cartEnabled ? 'El carrito no está disponible' : 
+                                record.stock <= 0 ? 'Sin stock' : 'Agregar al carrito'"
+                  tooltipPosition="top"
                 ></p-button>
 
                 <p-button
@@ -87,12 +82,10 @@
                   icon="pi pi-trash"
                   (click)="removeRecord(record)"
                   styleClass="p-button-rounded p-button-secondary"
-                  [ngClass]="{
-                      'p-button-danger': isLoggedIn() && cartEnabled && record.inCart,
-                      'p-button-secondary': !isLoggedIn() || !cartEnabled || !record.inCart
-                    }"
                   [disabled]="!isLoggedIn() || !cartEnabled || !record.inCart || record.Amount <= 0"
-                  [pTooltip]="!isLoggedIn() ? 'Please log in' : !cartEnabled ? 'Cart is disabled' : !record.inCart || record.Amount <= 0 ? 'Not in cart' : 'Remove from cart'"
+                  [pTooltip]="!isLoggedIn() ? 'Por favor inicia sesión' : 
+                                !cartEnabled ? 'Carrito deshabilitado' : 
+                                !record.inCart || record.Amount <= 0 ? 'No está en el carrito' : 'Eliminar del carrito'"
                   tooltipPosition="top"
                 ></p-button>
               </div>

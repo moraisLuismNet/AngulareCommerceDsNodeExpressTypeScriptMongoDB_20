@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
@@ -22,12 +22,21 @@ export class RecordsService {
    * Get HTTP headers with authorization token
    */
   getHeaders(): HttpHeaders {
-    // First try to get token from AuthGuard if available
-    let token;
+    // If not logged in, return empty headers without logging warnings
+    if (!this.authGuard.isLoggedIn()) {
+      return new HttpHeaders();
+    }
+
+    let token: string | null = null;
+    
+    // Try to get token from AuthGuard
     try {
-      token = this.authGuard?.getToken?.();
+      token = this.authGuard.getToken();
     } catch (e) {
-      console.warn('Error getting token from AuthGuard:', e);
+      // Only log in development
+      if (isDevMode()) {
+        console.warn('Error getting token from AuthGuard:', e);
+      }
     }
     
     // Fall back to sessionStorage and localStorage
@@ -36,13 +45,14 @@ export class RecordsService {
     }
     
     if (!token) {
-      console.warn('No authentication token found');
+      if (isDevMode()) {
+        console.warn('No authentication token found');
+      }
       return new HttpHeaders();
     }
     
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      // Note: We'll let the browser set Content-Type with the correct boundary for FormData
+      'Authorization': `Bearer ${token}`
     });
   }
 
@@ -186,28 +196,6 @@ export class RecordsService {
       catchError(error => {
         console.error('Error adding record:', error);
         return throwError(() => error);
-        console.error('Error status:', error.status, error.statusText);
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        
-        // Log headers if available
-        if (error.headers) {
-          console.error('Response headers:');
-          error.headers.keys().forEach((key: string) => {
-            console.error(`  ${key}:`, error.headers.get(key));
-          });
-        }
-        
-        // Log error response body if available
-        if (error.error) {
-          console.error('Error response body:', error.error);
-        }
-        
-        return throwError(() => ({
-          status: error.status,
-          message: error.error?.message || 'Error al crear el registro',
-          details: error.error || error.message
-        }));
       })
     );
   }
@@ -247,8 +235,6 @@ export class RecordsService {
 
     // Clean up undefined values
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
-
-    // console.log('Sending update data:', updateData);
 
     // Use _id (MongoDB) if available, otherwise fall back to IdRecord (frontend)
     const recordId = ('_id' in record && record._id) || record.IdRecord?.toString();

@@ -69,41 +69,56 @@ export class AuthGuard implements CanActivate {
       return false;
     }
     
-    // Verify we have user data
-    const userData = sessionStorage.getItem('user');
-    if (!userData) {
-      console.log('No user data found');
-      return false;
-    }
-    
     try {
-      const user = JSON.parse(userData);
+      // Check if the token has expired
       const decoded: any = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
       
-      // Verify email in token matches stored user data if email exists in token
-      if (decoded.email && user.userEmail && decoded.email !== user.userEmail) {
-        console.warn('Email mismatch between token and user data');
+      if (decoded.exp < currentTime) {
+        // Token expired
+        this.clearAuthData();
+        return false;
+      }
+      
+      // Check if we have user data
+      const userData = sessionStorage.getItem('user');
+      if (!userData) {
+        return false;
+      }
+      
+      // Check if the email in the token matches the stored user data
+      let user;
+      try {
+        user = JSON.parse(userData);
+        if (decoded.email && user.userEmail && decoded.email !== user.userEmail) {
+          console.warn('Email mismatch between token and user data');
+          this.clearAuthData();
+          return false;
+        }
+      } catch (e) {
+        console.error('Error parsing user data:', e);
         this.clearAuthData();
         return false;
       }
       
       return true;
     } catch (error) {
-      console.error('Error verifying user data:', error);
+      console.error('Error al verificar el token:', error);
       this.clearAuthData();
       return false;
     }
   }
   
   clearAuthData(): void {
-    console.log('Clearing authentication data');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('userRole');
-    // Also clear any user data in the UserService if needed
-    this.userService.clearUser();
   }
-
+  
+  logout() {
+    this.clearAuthData();
+    this.router.navigate(['/login']);
+  }
 
   getUserEmail(): string {
     try {
@@ -138,7 +153,6 @@ export class AuthGuard implements CanActivate {
           if (tokenFromUser && typeof tokenFromUser === 'string') {
             // Store token directly for easier access
             sessionStorage.setItem('token', tokenFromUser);
-            console.log('Token found in user object');
             return this.validateToken(tokenFromUser);
           }
         } catch (e) {
@@ -190,7 +204,6 @@ export class AuthGuard implements CanActivate {
       const isAdmin = this.isAdmin();
       
       if (!isAdmin) {
-        console.warn('AuthGuard - Access denied: User is not an admin');
         this.router.navigate(['/']);
         return false;
       }
