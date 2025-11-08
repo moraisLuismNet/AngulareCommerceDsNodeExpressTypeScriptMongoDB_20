@@ -8,41 +8,41 @@ import {
   DestroyRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, ParamMap } from '@angular/router';
-import { of } from 'rxjs';
-import { finalize, switchMap, map } from 'rxjs/operators';
+} from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { ActivatedRoute, ParamMap } from "@angular/router";
+import { of } from "rxjs";
+import { finalize, switchMap, map } from "rxjs/operators";
 
 // PrimeNG
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { CardModule } from 'primeng/card';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TooltipModule } from 'primeng/tooltip';
-import { MessageModule } from 'primeng/message';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TableModule } from 'primeng/table';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { ConfirmationService, MessageService } from "primeng/api";
+import { CardModule } from "primeng/card";
+import { ButtonModule } from "primeng/button";
+import { InputTextModule } from "primeng/inputtext";
+import { DialogModule } from "primeng/dialog";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { TooltipModule } from "primeng/tooltip";
+import { MessageModule } from "primeng/message";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { TableModule } from "primeng/table";
+import { InputNumberModule } from "primeng/inputnumber";
 
 // Components
-import { NavbarComponent } from 'src/app/shared/navbar/NavbarComponent';
+import { NavbarComponent } from "src/app/shared/navbar/navbar";
 
 // Services
-import { IRecord } from '../EcommerceInterface';
-import { RecordsService } from '../services/RecordsService';
-import { GroupsService } from '../services/GroupsService';
-import { CartService } from '../services/CartService';
-import { UserService } from 'src/app/services/UserService';
-import { StockService } from '../services/StockService';
-import { AuthGuard } from 'src/app/guards/AuthGuardService';
+import { IRecord } from "../ecommerce.interface";
+import { RecordsService } from "../services/records";
+import { GroupsService } from "../services/groups";
+import { CartService } from "../services/cart";
+import { UserService } from "src/app/services/user";
+import { StockService } from "../services/stock";
+import { AuthGuard } from "src/app/guards/auth-guard";
 
 @Component({
-  selector: 'app-listrecords',
+  selector: "app-listrecords",
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -58,21 +58,21 @@ import { AuthGuard } from 'src/app/guards/AuthGuardService';
     ProgressSpinnerModule,
     InputNumberModule,
   ],
-  templateUrl: './ListrecordsComponent.html',
+  templateUrl: "./list-records.html",
   providers: [ConfirmationService, MessageService],
 })
 export class ListrecordsComponent implements OnInit {
   @ViewChild(NavbarComponent, { static: false }) navbar!: NavbarComponent;
   records: IRecord[] = [];
   filteredRecords: IRecord[] = [];
-  searchText: string = '';
+  searchText: string = "";
   cart: IRecord[] = [];
   groupId: string | null = null;
-  groupName: string = '';
-  errorMessage: string = '';
+  groupName: string = "";
+  errorMessage: string = "";
   visibleError: boolean = false;
   visiblePhoto: boolean = false;
-  photo: string = '';
+  photo: string = "";
   cartItemsCount: number = 0;
   isAddingToCart = false;
   loading: boolean = false;
@@ -81,7 +81,7 @@ export class ListrecordsComponent implements OnInit {
 
   record: IRecord = {
     IdRecord: 0,
-    TitleRecord: '',
+    TitleRecord: "",
     YearOfPublication: null,
     ImageRecord: null,
     Photo: null,
@@ -90,11 +90,11 @@ export class ListrecordsComponent implements OnInit {
     stock: 0,
     Discontinued: false,
     GroupId: null,
-    GroupName: '',
-    NameGroup: '',
+    GroupName: "",
+    NameGroup: "",
   };
   userEmail: string | null = null;
-  @ViewChild('recordsContainer') recordsContainer!: ElementRef<HTMLElement>;
+  @ViewChild("recordsContainer") recordsContainer!: ElementRef<HTMLElement>;
   // Services injected using inject()
   private readonly recordsService = inject(RecordsService);
   private readonly groupsService = inject(GroupsService);
@@ -126,7 +126,7 @@ export class ListrecordsComponent implements OnInit {
     // Initialize cart status based on authentication
     const isLoggedIn = this.authGuard.isLoggedIn();
     this.cartEnabled = isLoggedIn;
-    
+
     if (isLoggedIn) {
       const user = this.authGuard.getUser();
       this.userEmail = user?.email || null;
@@ -143,12 +143,12 @@ export class ListrecordsComponent implements OnInit {
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params: ParamMap) => {
-        const idGroup = params.get('idGroup');
+        const idGroup = params.get("idGroup");
         if (idGroup) {
           this.groupId = idGroup;
           this.loadRecords(idGroup);
         } else {
-          this.errorMessage = 'No group ID provided';
+          this.errorMessage = "No group ID provided";
           this.visibleError = true;
         }
       });
@@ -162,7 +162,7 @@ export class ListrecordsComponent implements OnInit {
     }
 
     if (!this.userEmail) {
-      console.log('No user email, disabling cart');
+      console.log("No user email, disabling cart");
       this.cartService.cartEnabledSubject.next(false);
       return;
     }
@@ -172,7 +172,7 @@ export class ListrecordsComponent implements OnInit {
         this.cartService.cartEnabledSubject.next(status.enabled);
       },
       error: (error: any) => {
-        console.error('Error checking cart status:', error);
+        console.error("Error checking cart status:", error);
         // Default to enabled if there's an error
         this.cartService.cartEnabledSubject.next(true);
       },
@@ -189,7 +189,7 @@ export class ListrecordsComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (error) => {
-          console.error('Error in cart enabled subscription:', error);
+          console.error("Error in cart enabled subscription:", error);
           this.cartEnabled = true; // Default to enabled on error
           this.cdr.detectChanges();
         },
@@ -247,7 +247,7 @@ export class ListrecordsComponent implements OnInit {
         if (recordFound) {
           // Mark for check to trigger change detection
           this.cdr.markForCheck();
-        } 
+        }
       });
 
     // Initial cart sync if user is logged in
@@ -263,7 +263,7 @@ export class ListrecordsComponent implements OnInit {
           this.cartItemsCount = count;
         },
         error: (error) => {
-          console.error('Error in cart item count subscription:', error);
+          console.error("Error in cart item count subscription:", error);
         },
       });
 
@@ -275,21 +275,21 @@ export class ListrecordsComponent implements OnInit {
           this.userEmail = email;
         },
         error: (error) => {
-          console.error('Error in email subscription:', error);
+          console.error("Error in email subscription:", error);
         },
       });
   }
 
   confirm(): void {
     this.confirmationService.confirm({
-      message: 'Are you sure you want to continue?',
+      message: "Are you sure you want to continue?",
       accept: () => {},
     });
   }
 
   loadRecords(idGroup: string): void {
     this.loading = true;
-    this.errorMessage = '';
+    this.errorMessage = "";
     this.visibleError = false;
 
     // First we synchronize the cart with the backend
@@ -302,7 +302,7 @@ export class ListrecordsComponent implements OnInit {
       .pipe(
         switchMap((records: IRecord[]) => {
           if (!records || records.length === 0) {
-            this.errorMessage = 'No records found for this group';
+            this.errorMessage = "No records found for this group";
             this.visibleError = true;
             return of([]);
           }
@@ -340,8 +340,8 @@ export class ListrecordsComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (error: any) => {
-          console.error('Error loading records:', error);
-          this.errorMessage = 'Error loading records';
+          console.error("Error loading records:", error);
+          this.errorMessage = "Error loading records";
           this.visibleError = true;
           this.cdr.detectChanges();
         },
@@ -358,8 +358,8 @@ export class ListrecordsComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (error: any) => {
-          console.error('Error loading group name:', error);
-          this.errorMessage = 'Error loading group name';
+          console.error("Error loading group name:", error);
+          this.errorMessage = "Error loading group name";
           this.visibleError = true;
           this.cdr.detectChanges();
         },
@@ -377,12 +377,12 @@ export class ListrecordsComponent implements OnInit {
       const recordTitle = (
         record.title ||
         record.TitleRecord ||
-        ''
+        ""
       ).toLowerCase();
-      const groupName = (record.GroupName || '').toLowerCase();
+      const groupName = (record.GroupName || "").toLowerCase();
       const year = record.YearOfPublication
         ? record.YearOfPublication.toString()
-        : '';
+        : "";
 
       return (
         groupName.includes(searchTextLower) ||
@@ -412,7 +412,7 @@ export class ListrecordsComponent implements OnInit {
     }
 
     this.isAddingToCart = true;
-    this.errorMessage = '';
+    this.errorMessage = "";
     this.visibleError = false;
 
     this.cartService
@@ -457,9 +457,9 @@ export class ListrecordsComponent implements OnInit {
           this.filteredRecords = findAndUpdate(this.filteredRecords);
         },
         error: (error: any) => {
-          this.errorMessage = error.message || 'Error adding to cart';
+          this.errorMessage = error.message || "Error adding to cart";
           this.visibleError = true;
-          console.error('Error adding:', error);
+          console.error("Error adding:", error);
         },
       });
   }
@@ -512,8 +512,8 @@ export class ListrecordsComponent implements OnInit {
           this.filteredRecords = findAndUpdate(this.filteredRecords);
         },
         error: (error: any) => {
-          console.error('Error deleting item from cart:', error);
-          this.errorMessage = 'Error deleting item from cart';
+          console.error("Error deleting item from cart:", error);
+          this.errorMessage = "Error deleting item from cart";
           this.visibleError = true;
         },
       });
@@ -523,13 +523,13 @@ export class ListrecordsComponent implements OnInit {
 
   private initializeList(): void {
     // Configure custom events for list items
-    const recordItems = document.querySelectorAll('.record-item');
+    const recordItems = document.querySelectorAll(".record-item");
     recordItems.forEach((item) => {
-      item.addEventListener('mouseenter', () => {
-        item.classList.add('hovered');
+      item.addEventListener("mouseenter", () => {
+        item.classList.add("hovered");
       });
-      item.addEventListener('mouseleave', () => {
-        item.classList.remove('hovered');
+      item.addEventListener("mouseleave", () => {
+        item.classList.remove("hovered");
       });
     });
   }
@@ -537,7 +537,7 @@ export class ListrecordsComponent implements OnInit {
   private setupIntersectionObserver(): void {
     const options = {
       root: null,
-      rootMargin: '0px',
+      rootMargin: "0px",
       threshold: 0.1,
     };
 
@@ -545,14 +545,14 @@ export class ListrecordsComponent implements OnInit {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           // Load more records when the user reaches the end
-          console.log('Visible element:', entry.target);
+          console.log("Visible element:", entry.target);
           // Here you could implement loading more records
         }
       });
     }, options);
 
     // Observe the last element of the list
-    const lastItem = document.querySelector('.record-item:last-child');
+    const lastItem = document.querySelector(".record-item:last-child");
     if (lastItem) {
       observer.observe(lastItem);
     }
@@ -564,32 +564,32 @@ export class ListrecordsComponent implements OnInit {
 
     // Usar setTimeout para asegurar que el DOM se haya actualizado
     setTimeout(() => {
-      const recordItems = document.querySelectorAll('.record-item');
+      const recordItems = document.querySelectorAll(".record-item");
       recordItems.forEach((item, index) => {
         // Apply styles based on position
         if (index % 2 === 0) {
-          item.classList.add('even');
-          item.classList.remove('odd');
+          item.classList.add("even");
+          item.classList.remove("odd");
         } else {
-          item.classList.add('odd');
-          item.classList.remove('even');
+          item.classList.add("odd");
+          item.classList.remove("even");
         }
 
         // Update styles based on stock
-        const stockBadge = item.querySelector('.stock-badge');
+        const stockBadge = item.querySelector(".stock-badge");
         if (stockBadge) {
-          const stockText = stockBadge.textContent || '';
+          const stockText = stockBadge.textContent || "";
           const stockValue = parseInt(stockText, 10) || 0;
 
           // Update classes based on stock
-          stockBadge.classList.remove('out-of-stock', 'low-stock', 'in-stock');
+          stockBadge.classList.remove("out-of-stock", "low-stock", "in-stock");
 
           if (stockValue <= 0) {
-            stockBadge.classList.add('out-of-stock');
+            stockBadge.classList.add("out-of-stock");
           } else if (stockValue < 5) {
-            stockBadge.classList.add('low-stock');
+            stockBadge.classList.add("low-stock");
           } else {
-            stockBadge.classList.add('in-stock');
+            stockBadge.classList.add("in-stock");
           }
         }
       });
@@ -632,19 +632,19 @@ export class ListrecordsComponent implements OnInit {
       isAddingToCart: this.isAddingToCart,
       disabled: disabled,
       disabledReason: !this.isLoggedIn()
-        ? 'Not logged in'
+        ? "Not logged in"
         : cartDisabled
-        ? 'Cart disabled'
+        ? "Cart disabled"
         : !hasStock
-        ? 'No stock'
+        ? "No stock"
         : this.isAddingToCart
-        ? 'Adding to cart...'
+        ? "Adding to cart..."
         : reachedMax
-        ? 'Max quantity reached'
-        : 'Button should be enabled',
+        ? "Max quantity reached"
+        : "Button should be enabled",
     };
 
-    console.log('Add button debug:', debugInfo);
+    console.log("Add button debug:", debugInfo);
 
     return disabled;
   }

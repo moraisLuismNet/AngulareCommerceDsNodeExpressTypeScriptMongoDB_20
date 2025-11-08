@@ -8,22 +8,22 @@ import {
   ChangeDetectorRef,
   inject,
   AfterViewInit,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { Subject, of, forkJoin, throwError } from 'rxjs';
-import { takeUntil, filter, map, catchError, switchMap } from 'rxjs/operators';
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
+import { Subject, of, forkJoin, throwError } from "rxjs";
+import { takeUntil, filter, map, catchError, switchMap } from "rxjs/operators";
 
 // PrimeNG
-import { ButtonModule } from 'primeng/button';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { TableModule } from 'primeng/table';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { MessageModule } from 'primeng/message';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from "primeng/button";
+import { InputNumberModule } from "primeng/inputnumber";
+import { TableModule } from "primeng/table";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { MessageModule } from "primeng/message";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { DialogModule } from "primeng/dialog";
+import { ConfirmationService, MessageService } from "primeng/api";
 
 // Services & Interfaces
 import {
@@ -32,16 +32,16 @@ import {
   IGroup,
   GroupResponse,
   ExtendedCartDetail,
-} from '../EcommerceInterface';
-import { UserService } from 'src/app/services/UserService';
-import { CartDetailService } from '../services/CartDetailService';
-import { CartService } from 'src/app/ecommerce/services/CartService';
-import { OrderService } from '../services/OrderService';
-import { GroupsService } from '../services/GroupsService';
-import { RecordsService } from '../services/RecordsService';
+} from "../ecommerce.interface";
+import { UserService } from "src/app/services/user";
+import { CartDetailService } from "../services/cart-detail";
+import { CartService } from "src/app/ecommerce/services/cart";
+import { OrderService } from "../services/order";
+import { GroupsService } from "../services/groups";
+import { RecordsService } from "../services/records";
 
 @Component({
-  selector: 'app-cart-details',
+  selector: "app-cart-details",
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -54,26 +54,26 @@ import { RecordsService } from '../services/RecordsService';
     ConfirmDialogModule,
     DialogModule,
   ],
-  templateUrl: './CartDetailsComponent.html',
-  styleUrls: ['./CartDetailsComponent.css'],
+  templateUrl: "./cart-details.html",
+  styleUrls: ["./cart-details.css"],
   providers: [ConfirmationService, MessageService],
 })
 export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('cartContainer') cartContainer!: ElementRef;
+  @ViewChild("cartContainer") cartContainer!: ElementRef;
 
   cartDetails: ExtendedCartDetail[] = [];
   filteredCartDetails: ExtendedCartDetail[] = [];
-  emailUser: string | null = '';
+  emailUser: string | null = "";
   isAddingToCart = false;
   private readonly destroy$ = new Subject<void>();
-  currentViewedEmail: string = '';
+  currentViewedEmail: string = "";
   isViewingAsAdmin: boolean = false;
   isCreatingOrder = false;
-  alertMessage: string = '';
-  alertType: 'success' | 'error' | null = null;
+  alertMessage: string = "";
+  alertType: "success" | "error" | null = null;
   loading = false;
   visibleError = false;
-  errorMessage = '';
+  errorMessage = "";
 
   // State for scrolling
   private lastScrollPosition: number = 0;
@@ -105,7 +105,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
-        const viewingUserEmail = params['viewingUserEmail'];
+        const viewingUserEmail = params["viewingUserEmail"];
 
         if (viewingUserEmail && this.userService.isAdmin()) {
           // Admin
@@ -132,60 +132,69 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private loadCartDetails(email: string): void {
     this.loading = true;
-    
+
     forkJoin({
       groups: this.groupsService.getGroups().pipe(catchError(() => of([]))),
-      cart: this.cartService.getCart(email).pipe(catchError((error) => {
-        console.error('Error loading cart:', error);
-        return of(null);
-      })),
+      cart: this.cartService.getCart(email).pipe(
+        catchError((error) => {
+          console.error("Error loading cart:", error);
+          return of(null);
+        })
+      ),
     })
-    .pipe(
-      switchMap(({ groups, cart }) => {
-        
-        // Handle both 'items' and 'CartDetails' properties
-        const cartItems = Array.isArray(cart?.items) ? cart.items : 
-                         (Array.isArray(cart?.CartDetails) ? cart.CartDetails : []);
-        
-        if (cartItems.length === 0) {
-          return of({ groups, cart, completeRecordDetails: [] });
-        }
+      .pipe(
+        switchMap(({ groups, cart }) => {
+          // Handle both 'items' and 'CartDetails' properties
+          const cartItems = Array.isArray(cart?.items)
+            ? cart.items
+            : Array.isArray(cart?.CartDetails)
+            ? cart.CartDetails
+            : [];
 
-        // Map through cart items and fetch record details
-        const recordDetailObservables = cartItems.map((item: any) => {
-          // Handle both 'recordId' and 'RecordId' properties
-          const recordId = item.recordId || item.RecordId || (item.record ? item.record.id || item.record.Id : null);
-          
-          if (!recordId) {
-            console.warn('Cart item missing record ID:', item);
-            return of(null);
+          if (cartItems.length === 0) {
+            return of({ groups, cart, completeRecordDetails: [] });
           }
-          
-          return this.recordsService.getRecordById(recordId).pipe(
-            catchError((err) => {
-              console.error(`Error loading record ${recordId}:`, err);
-              return of(null);
-            })
-          );
-        });
 
-        return forkJoin(recordDetailObservables).pipe(
-          map((completeRecordDetails) => ({
-            groups,
-            cart: { ...cart, items: cartItems }, // Ensure items are included
-            completeRecordDetails: completeRecordDetails.filter(Boolean), // Remove nulls
-          }))
-        );
-      }),
-      takeUntil(this.destroy$)
-    )
+          // Map through cart items and fetch record details
+          const recordDetailObservables = cartItems.map((item: any) => {
+            // Handle both 'recordId' and 'RecordId' properties
+            const recordId =
+              item.recordId ||
+              item.RecordId ||
+              (item.record ? item.record.id || item.record.Id : null);
+
+            if (!recordId) {
+              console.warn("Cart item missing record ID:", item);
+              return of(null);
+            }
+
+            return this.recordsService.getRecordById(recordId).pipe(
+              catchError((err) => {
+                console.error(`Error loading record ${recordId}:`, err);
+                return of(null);
+              })
+            );
+          });
+
+          return forkJoin(recordDetailObservables).pipe(
+            map((completeRecordDetails) => ({
+              groups,
+              cart: { ...cart, items: cartItems }, // Ensure items are included
+              completeRecordDetails: completeRecordDetails.filter(Boolean), // Remove nulls
+            }))
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe({
         next: ({ groups, cart, completeRecordDetails }) => {
-          
           // Handle both 'items' and 'CartDetails' properties
-          const cartItems = Array.isArray(cart?.items) ? cart.items : 
-                          (Array.isArray(cart?.CartDetails) ? cart.CartDetails : []);
-          
+          const cartItems = Array.isArray(cart?.items)
+            ? cart.items
+            : Array.isArray(cart?.CartDetails)
+            ? cart.CartDetails
+            : [];
+
           if (!cart || cartItems.length === 0) {
             this.cartDetails = [];
             this.filteredCartDetails = [];
@@ -193,52 +202,60 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
             this.cdr.detectChanges();
             return;
           }
-          
+
           // Map the cart items to the ExtendedCartDetail format
           this.cartDetails = cartItems.map((item: any) => {
-            
             // Ensure we're using the data directly from the API
             const recordDetails = item.recordDetails || item.record || {};
-            
+
             const quantity = item.amount || 1;
             const price = item.price || 0;
-            const title = recordDetails.title || 'Título no disponible';
-            
+            const title = recordDetails.title || "Título no disponible";
+
             // Assign group names based on available data
-            let groupName = 'Group unknown';
-            
+            let groupName = "Group unknown";
+
             // Use the recordId to determine the group
-            const recordId = item.recordId || '';
-            
+            const recordId = item.recordId || "";
+
             // Get the group name from recordDetails
             // First try to get it from the recordDetails of the cart
             // If not, try to get it from recordDetails.recordDetails (for compatibility with old data)
-            groupName = recordDetails?.nameGroup || 
-                      recordDetails?.GroupName || 
-                      recordDetails?.recordDetails?.nameGroup || 
-                      recordDetails?.recordDetails?.GroupName || 
-                      'Group unknown';
-            
-            const image = recordDetails.image || '';
+            groupName =
+              recordDetails?.nameGroup ||
+              recordDetails?.GroupName ||
+              recordDetails?.recordDetails?.nameGroup ||
+              recordDetails?.recordDetails?.GroupName ||
+              "Group unknown";
+
+            const image = recordDetails.image || "";
             const stock = recordDetails.stock || 0;
             const total = quantity * price;
-            
+
             // Create the object with the structure expected by the template
             const mappedItem: ExtendedCartDetail = {
               // Properties of the original item without the ones we are going to overwrite
               ...Object.keys(item)
-                .filter(key => !['groupName', 'GroupName', 'RecordArtist', 'RecordGenre'].includes(key))
+                .filter(
+                  (key) =>
+                    ![
+                      "groupName",
+                      "GroupName",
+                      "RecordArtist",
+                      "RecordGenre",
+                    ].includes(key)
+                )
                 .reduce((obj, key) => {
                   obj[key] = item[key];
                   return obj;
                 }, {} as any),
-              
+
               // Explicitly assign the group name
               groupName: groupName,
               GroupName: groupName,
               RecordArtist: groupName,
               RecordGenre: groupName,
-              
+
               // Required properties by the template
               titleRecord: title,
               amount: quantity,
@@ -246,19 +263,19 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
               total: total,
               imageRecord: image,
               stock: stock,
-              
+
               // Record details
               RecordTitle: title,
               RecordPrice: price,
               RecordImage: image,
-              RecordYear: 'Year not available',
+              RecordYear: "Year not available",
               Quantity: quantity,
               Subtotal: total,
             };
-            
+
             return mappedItem as ExtendedCartDetail;
           });
-          
+
           this.filteredCartDetails = [...this.cartDetails];
 
           // We remove the second mapping that overwrites the correct group names
@@ -268,12 +285,12 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
           const groupMap = new Map<string, string>();
           groups.forEach((group: IGroup & { _id?: string }) => {
             if (group?._id) {
-              groupMap.set(group._id, group.NameGroup || 'Unnamed Group');
+              groupMap.set(group._id, group.NameGroup || "Unnamed Group");
             }
             if (group?.IdGroup) {
               groupMap.set(
                 String(group.IdGroup),
-                group.NameGroup || 'Unnamed Group'
+                group.NameGroup || "Unnamed Group"
               );
             }
           });
@@ -284,16 +301,15 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
               completeRecordMap.set(String(record.IdRecord), record);
             }
           });
-          
 
           this.filteredCartDetails = this.getFilteredCartDetails();
           this.loading = false;
           this.cdr.detectChanges();
         },
         error: (error) => {
-          console.error('Error in cart details subscription:', error);
+          console.error("Error in cart details subscription:", error);
           this.loading = false;
-          this.showAlert('Failed to load cart details.', 'error');
+          this.showAlert("Failed to load cart details.", "error");
           this.cdr.detectChanges();
         },
       });
@@ -315,17 +331,17 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
         return (
           detail &&
-          typeof amount === 'number' &&
+          typeof amount === "number" &&
           amount > 0 &&
-          (typeof recordId === 'string' || typeof recordId === 'number') // Allow string for recordId
+          (typeof recordId === "string" || typeof recordId === "number") // Allow string for recordId
         );
       })
       .map((detail: any) => {
         const amount = detail.amount ?? detail.Amount ?? 0;
         const price = detail.price ?? detail.Price ?? 0;
-        const titleRecord = detail.titleRecord ?? detail.TitleRecord ?? '';
-        const groupName = detail.groupName ?? detail.GroupName ?? '';
-        const imageRecord = detail.imageRecord ?? detail.ImageRecord ?? '';
+        const titleRecord = detail.titleRecord ?? detail.TitleRecord ?? "";
+        const groupName = detail.groupName ?? detail.GroupName ?? "";
+        const imageRecord = detail.imageRecord ?? detail.ImageRecord ?? "";
         const total = detail.total ?? detail.Total ?? price * amount;
         const recordId = detail.recordId ?? detail.RecordId;
         const stock = detail.stock ?? 0;
@@ -394,7 +410,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error("Error adding to cart:", error);
       // Revert local changes if it fails
       const itemIndex = this.filteredCartDetails.findIndex(
         (d) => d.recordId === detail.recordId
@@ -457,10 +473,10 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
 
-      this.showAlert('Product removed from cart', 'success');
+      this.showAlert("Product removed from cart", "success");
     } catch (error) {
-      console.error('Error removing from cart:', error);
-      this.showAlert('Failed to remove product from cart', 'error');
+      console.error("Error removing from cart:", error);
+      this.showAlert("Failed to remove product from cart", "error");
       // Revert local changes if it fails
       const itemIndex = this.filteredCartDetails.findIndex(
         (d) => d.recordId === detail.recordId
@@ -493,7 +509,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroy$.complete();
     // Clean up any scroll listeners
     if (this.handleScrollBound) {
-      window.removeEventListener('scroll', this.handleScrollBound);
+      window.removeEventListener("scroll", this.handleScrollBound);
     }
   }
 
@@ -503,7 +519,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
       this.lastScrollPosition = window.scrollY;
 
       // Add a listener for the scroll event
-      window.addEventListener('scroll', this.handleScrollBound, {
+      window.addEventListener("scroll", this.handleScrollBound, {
         passive: true,
       });
     }
@@ -517,9 +533,9 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
       // Hide/show elements based on scroll position
       if (currentScroll > 100 && currentScroll > this.lastScrollPosition) {
         // Scrolling down
-        cartElement.classList.add('scrolling-down');
+        cartElement.classList.add("scrolling-down");
       } else {
-        cartElement.classList.remove('scrolling-down');
+        cartElement.classList.remove("scrolling-down");
       }
 
       this.lastScrollPosition = currentScroll;
@@ -528,28 +544,29 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private refreshCart(): void {
     if (!this.currentViewedEmail) return;
-    
+
     // Reset cart data
     this.cartDetails = [];
     this.filteredCartDetails = [];
-    
+
     // Force reload the cart details
     this.loadCartDetails(this.currentViewedEmail);
-    
+
     // Update the cart count in the navbar using the cart$ observable
-    this.cartService.getCart(this.currentViewedEmail).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (cart: any) => {
-        const itemCount = cart?.items?.length || 0;
-        const totalPrice = cart?.totalPrice || 0;
-        this.cartService.updateCartNavbar(itemCount, totalPrice);
-      },
-      error: (error: any) => {
-        console.error('Error refreshing cart count:', error);
-        this.cartService.updateCartNavbar(0, 0);
-      }
-    });
+    this.cartService
+      .getCart(this.currentViewedEmail)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cart: any) => {
+          const itemCount = cart?.items?.length || 0;
+          const totalPrice = cart?.totalPrice || 0;
+          this.cartService.updateCartNavbar(itemCount, totalPrice);
+        },
+        error: (error: any) => {
+          console.error("Error refreshing cart count:", error);
+          this.cartService.updateCartNavbar(0, 0);
+        },
+      });
   }
 
   async createOrder(): Promise<void> {
@@ -559,13 +576,13 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.clearAlert();
 
     try {
-      const paymentMethod = 'credit-card';
+      const paymentMethod = "credit-card";
 
       const order = await this.orderService
         .createOrderFromCart(this.currentViewedEmail, paymentMethod)
         .pipe(
-          catchError(error => {
-            console.error('Order creation error:', {
+          catchError((error) => {
+            console.error("Order creation error:", {
               status: error.status,
               statusText: error.statusText,
               url: error.url,
@@ -573,7 +590,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
               headers: error.headers,
               message: error.message,
               name: error.name,
-              stack: error.stack
+              stack: error.stack,
             });
             return throwError(() => error);
           })
@@ -581,34 +598,34 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
         .toPromise();
 
       if (!order) {
-        throw new Error('No order was returned from the server');
+        throw new Error("No order was returned from the server");
       }
 
-      this.showAlert('Order created successfully', 'success');
-      
+      this.showAlert("Order created successfully", "success");
+
       // Refresh the cart to get the latest state from the server
       this.refreshCart();
     } catch (error: any) {
-      console.error('Order creation failed:', error);
-      let errorMsg = 'Failed to create order';
-      
+      console.error("Order creation failed:", error);
+      let errorMsg = "Failed to create order";
+
       if (error.status === 400) {
-        errorMsg = 'Invalid request. Please check your cart and try again.';
+        errorMsg = "Invalid request. Please check your cart and try again.";
       } else if (error.status === 401 || error.status === 403) {
-        errorMsg = 'Authentication required. Please log in again.';
+        errorMsg = "Authentication required. Please log in again.";
       } else if (error.status === 500) {
-        errorMsg = 'Server error. Please try again later or contact support.';
+        errorMsg = "Server error. Please try again later or contact support.";
       } else if (error.error?.message) {
         errorMsg = error.error.message;
       }
-      
-      this.showAlert(errorMsg, 'error');
+
+      this.showAlert(errorMsg, "error");
     } finally {
       this.isCreatingOrder = false;
     }
   }
 
-  private showAlert(message: string, type: 'success' | 'error'): void {
+  private showAlert(message: string, type: "success" | "error"): void {
     this.alertMessage = message;
     this.alertType = type;
 
@@ -617,7 +634,7 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private clearAlert(): void {
-    this.alertMessage = '';
+    this.alertMessage = "";
     this.alertType = null;
   }
 
@@ -660,9 +677,9 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (detail.recordDetails?.stock !== undefined) {
       const shouldDisable = checkStock(detail.recordDetails.stock);
       console.log(
-        'Stock from record.data.stock:',
+        "Stock from record.data.stock:",
         detail.recordDetails.stock,
-        'Disable:',
+        "Disable:",
         shouldDisable
       );
       return shouldDisable;
@@ -672,9 +689,9 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (detail.record?.stock !== undefined) {
       const shouldDisable = checkStock(detail.record.stock);
       console.log(
-        'Stock from record.stock:',
+        "Stock from record.stock:",
         detail.record.stock,
-        'Disable:',
+        "Disable:",
         shouldDisable
       );
       return shouldDisable;
@@ -684,16 +701,16 @@ export class CartDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (detail.stock !== undefined) {
       const shouldDisable = checkStock(detail.stock);
       console.log(
-        'Stock from detail.stock:',
+        "Stock from detail.stock:",
         detail.stock,
-        'Disable:',
+        "Disable:",
         shouldDisable
       );
       return shouldDisable;
     }
 
     // If no stock information is found, enable the button
-    console.log('No stock information found, enabling button');
+    console.log("No stock information found, enabling button");
     return false;
   }
 }

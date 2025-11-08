@@ -1,16 +1,16 @@
-import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subject, throwError } from 'rxjs';
-import { catchError, tap, takeUntil, map } from 'rxjs/operators';
-import { UserService } from 'src/app/services/UserService';
-import { IRecord, ICart } from '../EcommerceInterface';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { CartDetailService } from './CartDetailService';
-import { environment } from 'src/environments/environment';
-import { AuthGuard } from 'src/app/guards/AuthGuardService';
-import { StockService } from './StockService';
+import { Injectable, OnDestroy } from "@angular/core";
+import { BehaviorSubject, Observable, of, Subject, throwError } from "rxjs";
+import { catchError, tap, takeUntil, map } from "rxjs/operators";
+import { UserService } from "src/app/services/user";
+import { IRecord, ICart } from "../ecommerce.interface";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { CartDetailService } from "./cart-detail";
+import { environment } from "src/environments/environment";
+import { AuthGuard } from "src/app/guards/auth-guard";
+import { StockService } from "./stock";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class CartService implements OnDestroy {
   private readonly urlAPI = environment.urlAPI;
@@ -76,13 +76,13 @@ export class CartService implements OnDestroy {
       cartItems.reduce((total, item) => total + (Number(item.Amount) || 1), 0)
     );
     this.calculateAndUpdateLocalTotal();
-    this.saveCartForUser(this.userService.email || '', cartItems);
+    this.saveCartForUser(this.userService.email || "", cartItems);
   }
 
   private shouldSyncCart(email: string | null): boolean {
     // Skip cart sync for admin users
-    const userRole = sessionStorage.getItem('userRole');
-    if (userRole === 'Admin') {
+    const userRole = sessionStorage.getItem("userRole");
+    if (userRole === "Admin") {
       return false;
     }
 
@@ -95,8 +95,8 @@ export class CartService implements OnDestroy {
     if (!email) return;
 
     // Skip cart sync for admin users
-    const userRole = sessionStorage.getItem('userRole');
-    if (userRole === 'Admin') {
+    const userRole = sessionStorage.getItem("userRole");
+    if (userRole === "Admin") {
       return;
     }
 
@@ -104,27 +104,26 @@ export class CartService implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (response: any) => {
-          
           // Access items array directly from the response
           const cartItems = response.items || [];
 
           const updatedCart = cartItems.map((item: any) => {
             const recordDetails = item.recordDetails || {};
-            
+
             return {
               IdRecord: item.recordId,
-              TitleRecord: recordDetails.title || '',
-              ImageRecord: recordDetails.image || '',
+              TitleRecord: recordDetails.title || "",
+              ImageRecord: recordDetails.image || "",
               Amount: item.amount || 1,
               Price: item.price || 0,
               inCart: true,
               idRecord: item.recordId,
               price: Number(item.price) || 0,
-              title: recordDetails.title || '',
-              image: recordDetails.image || '',
+              title: recordDetails.title || "",
+              image: recordDetails.image || "",
               stock: recordDetails.stock || 0,
               // Preserve all original recordDetails
-              recordDetails: { ...recordDetails }
+              recordDetails: { ...recordDetails },
             };
           });
 
@@ -143,7 +142,7 @@ export class CartService implements OnDestroy {
           this.updateCartState(updatedCart);
         },
         (error) => {
-          console.error('Error syncing cart with backend:', error);
+          console.error("Error syncing cart with backend:", error);
           this.resetCart();
         }
       );
@@ -151,7 +150,7 @@ export class CartService implements OnDestroy {
 
   addToCart(record: IRecord): Observable<any> {
     const userEmail = this.userService.email;
-    if (!userEmail) return throwError(() => new Error('Unauthenticated user'));
+    if (!userEmail) return throwError(() => new Error("Unauthenticated user"));
 
     return this.cartDetailService
       .addToCartDetail(userEmail, record.IdRecord, 1)
@@ -184,7 +183,7 @@ export class CartService implements OnDestroy {
           );
         }),
         catchError((error) => {
-          console.error('Error adding to cart:', error);
+          console.error("Error adding to cart:", error);
           return throwError(() => error);
         })
       );
@@ -193,7 +192,7 @@ export class CartService implements OnDestroy {
   removeFromCart(record: IRecord): Observable<any> {
     const userEmail = this.userService.email;
     if (!userEmail) {
-      return throwError(() => new Error('Unauthenticated user'));
+      return throwError(() => new Error("Unauthenticated user"));
     }
     return this.cartDetailService
       .removeFromCartDetail(userEmail, record.IdRecord, 1)
@@ -224,7 +223,7 @@ export class CartService implements OnDestroy {
           );
         }),
         catchError((error) => {
-          console.error('Error removing from cart:', error);
+          console.error("Error removing from cart:", error);
           return throwError(() => error);
         })
       );
@@ -259,7 +258,7 @@ export class CartService implements OnDestroy {
       this.cartSubject.next([...currentCart]);
       this.updateCartCount(currentCart);
       this.calculateAndUpdateLocalTotal();
-      this.saveCartForUser(this.userService.email || '', currentCart);
+      this.saveCartForUser(this.userService.email || "", currentCart);
     }
   }
 
@@ -267,19 +266,22 @@ export class CartService implements OnDestroy {
     const headers = this.getHeaders();
     // Get the cart directly for the specific email
     return this.httpClient
-      .get<{ success: boolean; data: ICart }>(`${this.urlAPI}carts/${encodeURIComponent(email)}`, {
-        headers,
-      })
+      .get<{ success: boolean; data: ICart }>(
+        `${this.urlAPI}carts/${encodeURIComponent(email)}`,
+        {
+          headers,
+        }
+      )
       .pipe(
         map((response) => {
           // If the response is successful and has data
           if (response && response.success && response.data) {
             return response.data as ICart;
           }
-          throw new Error('No se pudo cargar el carrito');
+          throw new Error("No se pudo cargar el carrito");
         }),
         catchError((error) => {
-          console.error('Error al obtener el carrito:', error);
+          console.error("Error al obtener el carrito:", error);
           // If the error is 404 (not found), return an empty cart
           if (error.status === 404) {
             // Return an empty cart with the minimum required structure
@@ -291,7 +293,7 @@ export class CartService implements OnDestroy {
               enabled: true,
             } as unknown as ICart);
           }
-          return throwError(() => new Error('Error al cargar el carrito'));
+          return throwError(() => new Error("Error al cargar el carrito"));
         })
       );
   }
@@ -314,7 +316,7 @@ export class CartService implements OnDestroy {
       .get<ICart[]>(`${this.urlAPI}Carts`, { headers })
       .pipe(
         catchError((error) => {
-          console.error('Error getting all carts:', error);
+          console.error("Error getting all carts:", error);
           return throwError(() => error);
         })
       );
@@ -343,7 +345,7 @@ export class CartService implements OnDestroy {
           this.updateCartState(updatedCart);
         }),
         catchError((error) => {
-          console.error('Error disabling cart:', error);
+          console.error("Error disabling cart:", error);
           return throwError(() => error);
         })
       );
@@ -355,7 +357,7 @@ export class CartService implements OnDestroy {
       .post(`${this.urlAPI}Carts/Enable/${email}`, {}, { headers })
       .pipe(
         catchError((error) => {
-          console.error('Error enabling cart:', error);
+          console.error("Error enabling cart:", error);
           return throwError(() => error);
         })
       );
@@ -399,7 +401,7 @@ export class CartService implements OnDestroy {
         }),
         map(() => ({ enabled: true })), // Map to expected response format
         catchError((error) => {
-          console.error('Error getting cart status:', error);
+          console.error("Error getting cart status:", error);
           // Default to enabled if there's an error or 404
           const enabled = error.status === 404 || error.status === 0;
           this.cartEnabledSubject.next(enabled);

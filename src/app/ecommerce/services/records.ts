@@ -1,14 +1,18 @@
-import { Injectable, isDevMode } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
-import { AuthGuard } from 'src/app/guards/AuthGuardService';
-import { IRecord } from '../EcommerceInterface';
-import { StockService } from './StockService';
+import { Injectable, isDevMode } from "@angular/core";
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpErrorResponse,
+} from "@angular/common/http";
+import { Observable, throwError } from "rxjs";
+import { catchError, map, tap } from "rxjs/operators";
+import { environment } from "src/environments/environment";
+import { AuthGuard } from "src/app/guards/auth-guard";
+import { IRecord } from "../ecommerce.interface";
+import { StockService } from "./stock";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class RecordsService {
   urlAPI = environment.urlAPI;
@@ -28,31 +32,31 @@ export class RecordsService {
     }
 
     let token: string | null = null;
-    
+
     // Try to get token from AuthGuard
     try {
       token = this.authGuard.getToken();
     } catch (e) {
       // Only log in development
       if (isDevMode()) {
-        console.warn('Error getting token from AuthGuard:', e);
+        console.warn("Error getting token from AuthGuard:", e);
       }
     }
-    
+
     // Fall back to sessionStorage and localStorage
     if (!token) {
-      token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      token = sessionStorage.getItem("token") || localStorage.getItem("token");
     }
-    
+
     if (!token) {
       if (isDevMode()) {
-        console.warn('No authentication token found');
+        console.warn("No authentication token found");
       }
       return new HttpHeaders();
     }
-    
+
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     });
   }
 
@@ -62,14 +66,14 @@ export class RecordsService {
     return this.http
       .get<any>(`${this.urlAPI}records`, {
         headers,
-        observe: 'response', // Get full response including status and headers
+        observe: "response", // Get full response including status and headers
       })
       .pipe(
         map((response) => {
           const body = response.body;
 
           if (!body) {
-            console.warn('Empty response body');
+            console.warn("Empty response body");
             return [];
           }
 
@@ -79,7 +83,7 @@ export class RecordsService {
 
           if (!Array.isArray(records)) {
             console.warn(
-              'Unexpected response format, expected an array but got:',
+              "Unexpected response format, expected an array but got:",
               typeof records
             );
             return [];
@@ -98,126 +102,136 @@ export class RecordsService {
           });
         }),
         catchError((error) => {
-          console.error('Error in getRecords:', error);
-          console.error('Error status:', error.status);
-          console.error('Error message:', error.message);
-          console.error('Error response:', error.error);
+          console.error("Error in getRecords:", error);
+          console.error("Error status:", error.status);
+          console.error("Error message:", error.message);
+          console.error("Error response:", error.error);
           return throwError(() => error);
         })
       );
   }
 
   addRecord(record: IRecord): Observable<IRecord> {
-    
     // Validate required fields
-    const title = (record.TitleRecord || record.title || '').trim();
-    const groupId = record.GroupId?.toString() || '';
-    
+    const title = (record.TitleRecord || record.title || "").trim();
+    const groupId = record.GroupId?.toString() || "";
+
     if (!title || !groupId) {
-      console.error('Validation failed - missing title or groupId');
-      return throwError(() => new Error('Title and Group ID are required'));
+      console.error("Validation failed - missing title or groupId");
+      return throwError(() => new Error("Title and Group ID are required"));
     }
 
     // Create form data
     const formData = new URLSearchParams();
-    
+
     // Add required fields
-    formData.append('title', title);
-    formData.append('yearOfPublication', (record.YearOfPublication?.toString() || '').trim());
-    formData.append('price', (record.Price?.toString() || '0').trim());
-    formData.append('stock', (record.stock?.toString() || '0').trim());
-    formData.append('discontinued', (record.Discontinued?.toString() || 'false').trim());
-    formData.append('GroupId', groupId);
-    
+    formData.append("title", title);
+    formData.append(
+      "yearOfPublication",
+      (record.YearOfPublication?.toString() || "").trim()
+    );
+    formData.append("price", (record.Price?.toString() || "0").trim());
+    formData.append("stock", (record.stock?.toString() || "0").trim());
+    formData.append(
+      "discontinued",
+      (record.Discontinued?.toString() || "false").trim()
+    );
+    formData.append("GroupId", groupId);
+
     // Add optional fields if present
-    const nameGroup = (record.NameGroup || record.nameGroup || '').trim();
+    const nameGroup = (record.NameGroup || record.nameGroup || "").trim();
     if (nameGroup) {
-      formData.append('nameGroup', nameGroup);
+      formData.append("nameGroup", nameGroup);
     }
-    
+
     // Add imageRecord if present
     if (record.imageRecord) {
-      formData.append('imageRecord', record.imageRecord);
+      formData.append("imageRecord", record.imageRecord);
     } else {
-      console.log('No imageRecord present in the record object');
+      console.log("No imageRecord present in the record object");
     }
-    
+
     // Add photo if present
     if (record.Photo) {
       const fileFormData = new FormData();
-      fileFormData.append('imageRecord', record.Photo, record.Photo.name || 'record-photo');
-      
+      fileFormData.append(
+        "imageRecord",
+        record.Photo,
+        record.Photo.name || "record-photo"
+      );
+
       // Add other fields to FormData
       formData.forEach((value, key) => {
         fileFormData.append(key, value.toString());
       });
-      
+
       const fileHeaders = this.getHeaders();
       // Remove Content-Type header
       const uploadHeaders = new HttpHeaders();
-      
+
       // Copy all headers except Content-Type
-      fileHeaders.keys().forEach(key => {
+      fileHeaders.keys().forEach((key) => {
         const headerValue = fileHeaders.get(key);
-        if (headerValue && key.toLowerCase() !== 'content-type') {
+        if (headerValue && key.toLowerCase() !== "content-type") {
           uploadHeaders.set(key, headerValue);
         }
       });
-      
-      return this.http.post<IRecord>(`${this.urlAPI}records`, fileFormData, { 
-        headers: uploadHeaders 
-      }).pipe(
-        tap(response => console.log('Record created with file:', response)),
-        catchError(error => {
-          console.error('Error creating record with file:', error);
-          return throwError(() => error);
+
+      return this.http
+        .post<IRecord>(`${this.urlAPI}records`, fileFormData, {
+          headers: uploadHeaders,
         })
-      );
+        .pipe(
+          tap((response) => console.log("Record created with file:", response)),
+          catchError((error) => {
+            console.error("Error creating record with file:", error);
+            return throwError(() => error);
+          })
+        );
     }
-    
+
     // If there is an image URL, add it to the form.
     if (record.imageRecord) {
-      formData.append('imageRecord', record.imageRecord);
+      formData.append("imageRecord", record.imageRecord);
     }
 
     // Send as normal form data
-    const formHeaders = this.getHeaders()
-      .set('Content-Type', 'application/x-www-form-urlencoded');
-
-    return this.http.post<IRecord>(
-      `${this.urlAPI}records`,
-      formData.toString(),
-      { 
-        headers: formHeaders,
-        withCredentials: true
-      }
-    ).pipe(
-      
-      catchError(error => {
-        console.error('Error adding record:', error);
-        return throwError(() => error);
-      })
+    const formHeaders = this.getHeaders().set(
+      "Content-Type",
+      "application/x-www-form-urlencoded"
     );
+
+    return this.http
+      .post<IRecord>(`${this.urlAPI}records`, formData.toString(), {
+        headers: formHeaders,
+        withCredentials: true,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error("Error adding record:", error);
+          return throwError(() => error);
+        })
+      );
   }
 
   updateRecord(record: IRecord & { _id?: string }): Observable<IRecord> {
     // Get token from sessionStorage (where login stores it) or fall back to localStorage
     let token =
-      sessionStorage.getItem('token') || localStorage.getItem('token');
+      sessionStorage.getItem("token") || localStorage.getItem("token");
 
     if (!token) {
       console.error(
-        'No authentication token found in sessionStorage or localStorage'
+        "No authentication token found in sessionStorage or localStorage"
       );
       return throwError(
-        () => new Error('Authentication required - Please log in again')
+        () => new Error("Authentication required - Please log in again")
       );
     }
 
     // Create headers with the token and JSON content type
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     });
 
     // Prepare the update data object
@@ -230,18 +244,21 @@ export class RecordsService {
       nameGroup: record.NameGroup,
       Group: record.GroupId,
       imageRecord: record.ImageRecord || undefined,
-      PhotoName: record.PhotoName || undefined
+      PhotoName: record.PhotoName || undefined,
     };
 
     // Clean up undefined values
-    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key]
+    );
 
     // Use _id (MongoDB) if available, otherwise fall back to IdRecord (frontend)
-    const recordId = ('_id' in record && record._id) || record.IdRecord?.toString();
+    const recordId =
+      ("_id" in record && record._id) || record.IdRecord?.toString();
 
     if (!recordId) {
       const errorMsg =
-        'No valid ID found in record. Record must have either _id (MongoDB) or IdRecord (frontend) property';
+        "No valid ID found in record. Record must have either _id (MongoDB) or IdRecord (frontend) property";
       console.error(errorMsg, record);
       return throwError(() => new Error(errorMsg));
     }
@@ -251,7 +268,7 @@ export class RecordsService {
     return this.http
       .put<any>(url, updateData, {
         headers,
-        observe: 'response',
+        observe: "response",
         withCredentials: true,
       })
       .pipe(
@@ -259,7 +276,7 @@ export class RecordsService {
           // If the response body is empty, return the updated record
           if (!response.body) {
             console.warn(
-              'Server response body is empty, returning updated record'
+              "Server response body is empty, returning updated record"
             );
             return {
               ...record,
@@ -332,7 +349,7 @@ export class RecordsService {
         }),
         catchError((error: any) => {
           // Extract and log validation errors if they exist
-          if (error.error && typeof error.error === 'object') {
+          if (error.error && typeof error.error === "object") {
             const validationErrors = [];
             for (const key in error.error) {
               if (error.error.hasOwnProperty(key)) {
@@ -340,7 +357,7 @@ export class RecordsService {
               }
             }
             if (validationErrors.length > 0) {
-              console.error('Validation errors:', validationErrors);
+              console.error("Validation errors:", validationErrors);
             }
           }
 
@@ -356,21 +373,21 @@ export class RecordsService {
   deleteRecord(id: number): Observable<IRecord> {
     // Get token from sessionStorage or localStorage
     const token =
-      sessionStorage.getItem('token') || localStorage.getItem('token');
+      sessionStorage.getItem("token") || localStorage.getItem("token");
 
     if (!token) {
-      const error = new Error('No authentication token found') as any;
-      console.error('Authentication error:', error);
+      const error = new Error("No authentication token found") as any;
+      console.error("Authentication error:", error);
       return throwError(() => error);
     }
 
     return new Observable<IRecord>((subscriber) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('DELETE', `${this.urlAPI}records/${id}`, true);
+      xhr.open("DELETE", `${this.urlAPI}records/${id}`, true);
 
       // Set headers
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("Content-Type", "application/json");
 
       xhr.onload = () => {
         try {
@@ -389,22 +406,22 @@ export class RecordsService {
             subscriber.complete();
           } else {
             const error = new Error(
-              xhr.statusText || 'Error deleting record'
+              xhr.statusText || "Error deleting record"
             ) as any;
             error.status = xhr.status;
             error.response = responseData;
-            console.error('Delete error:', error);
+            console.error("Delete error:", error);
             subscriber.error(error);
           }
         } catch (e) {
-          console.error('Error processing delete response:', e);
+          console.error("Error processing delete response:", e);
           subscriber.error(e);
         }
       };
 
       xhr.onerror = () => {
-        const error = new Error('Network error during delete operation');
-        console.error('Network error during delete:', error);
+        const error = new Error("Network error during delete operation");
+        console.error("Network error during delete:", error);
         subscriber.error(error);
       };
 
@@ -420,13 +437,13 @@ export class RecordsService {
     return this.http
       .get<any>(`${this.urlAPI}groups/${idGroup}`, {
         headers,
-        observe: 'response',
+        observe: "response",
       })
       .pipe(
         map((response) => {
           const body = response.body;
           if (!body) {
-            console.warn('Empty response body');
+            console.warn("Empty response body");
             return [];
           }
 
@@ -449,15 +466,15 @@ export class RecordsService {
 
           if (!Array.isArray(records)) {
             console.warn(
-              'Unexpected response format, expected an array but got:',
+              "Unexpected response format, expected an array but got:",
               typeof records
             );
             return [];
           }
 
           const groupName = groupData
-            ? groupData.nameGroup || groupData.NameGroup || ''
-            : '';
+            ? groupData.nameGroup || groupData.NameGroup || ""
+            : "";
 
           // Map MongoDB _id to IdRecord and ensure both are set
           return records.map(
@@ -466,7 +483,7 @@ export class RecordsService {
                 ...record,
                 _id: record._id || undefined,
                 IdRecord: record.IdRecord || record._id || 0,
-                TitleRecord: record.title || record.TitleRecord || '',
+                TitleRecord: record.title || record.TitleRecord || "",
                 YearOfPublication:
                   record.yearOfPublication || record.YearOfPublication || null,
                 Price: parseFloat(record.price || record.Price) || 0,
@@ -478,17 +495,17 @@ export class RecordsService {
                   : record.GroupId || null,
                 GroupName: groupData
                   ? groupData.nameGroup || groupData.NameGroup
-                  : record.GroupName || '',
+                  : record.GroupName || "",
                 NameGroup: groupData
                   ? groupData.nameGroup || groupData.NameGroup
-                  : record.NameGroup || '',
+                  : record.NameGroup || "",
                 ImageRecord: record.imageRecord || record.ImageRecord || null,
                 Photo: record.Photo || null,
                 PhotoName:
                   record.PhotoName ||
                   (record.imageRecord || record.ImageRecord
                     ? (record.imageRecord || record.ImageRecord)
-                        .split('/')
+                        .split("/")
                         .pop()
                     : null),
               } as IRecord)
@@ -543,33 +560,44 @@ export class RecordsService {
 
   getRecordById(id: string | number): Observable<IRecord> {
     const headers = this.getHeaders();
-    return this.http
-      .get<any>(`${this.urlAPI}records/${id}`, { headers })
-      .pipe(
-        map(response => {
-          const recordData = response.data || response;
-          
-          // Comprehensive mapping to ensure all properties are consistent
-          const mappedRecord: IRecord = {
-            ...recordData,
-            _id: recordData._id,
-            IdRecord: recordData.IdRecord || recordData._id,
-            TitleRecord: recordData.title || recordData.TitleRecord || '',
-            YearOfPublication: recordData.yearOfPublication || recordData.YearOfPublication || null,
-            Price: parseFloat(recordData.price || recordData.Price) || 0,
-            stock: recordData.stock !== undefined ? recordData.stock : recordData.Stock,
-            Discontinued: recordData.discontinued || recordData.Discontinued || false,
-            GroupId: recordData.GroupId || (recordData.Group ? recordData.Group._id : null),
-            GroupName: recordData.GroupName || (recordData.Group ? recordData.Group.nameGroup : ''),
-            NameGroup: recordData.NameGroup || (recordData.Group ? recordData.Group.nameGroup : ''),
-            ImageRecord: recordData.imageRecord || recordData.ImageRecord || null,
-          };
-          return mappedRecord;
-        }),
-        catchError((error) => {
-          console.error(`Error fetching record by id ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.http.get<any>(`${this.urlAPI}records/${id}`, { headers }).pipe(
+      map((response) => {
+        const recordData = response.data || response;
+
+        // Comprehensive mapping to ensure all properties are consistent
+        const mappedRecord: IRecord = {
+          ...recordData,
+          _id: recordData._id,
+          IdRecord: recordData.IdRecord || recordData._id,
+          TitleRecord: recordData.title || recordData.TitleRecord || "",
+          YearOfPublication:
+            recordData.yearOfPublication ||
+            recordData.YearOfPublication ||
+            null,
+          Price: parseFloat(recordData.price || recordData.Price) || 0,
+          stock:
+            recordData.stock !== undefined
+              ? recordData.stock
+              : recordData.Stock,
+          Discontinued:
+            recordData.discontinued || recordData.Discontinued || false,
+          GroupId:
+            recordData.GroupId ||
+            (recordData.Group ? recordData.Group._id : null),
+          GroupName:
+            recordData.GroupName ||
+            (recordData.Group ? recordData.Group.nameGroup : ""),
+          NameGroup:
+            recordData.NameGroup ||
+            (recordData.Group ? recordData.Group.nameGroup : ""),
+          ImageRecord: recordData.imageRecord || recordData.ImageRecord || null,
+        };
+        return mappedRecord;
+      }),
+      catchError((error) => {
+        console.error(`Error fetching record by id ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
 }

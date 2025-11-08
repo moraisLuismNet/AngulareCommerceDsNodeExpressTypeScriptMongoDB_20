@@ -1,23 +1,33 @@
-import { Component, OnInit, afterNextRender, ElementRef, ViewChild, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
+import {
+  Component,
+  OnInit,
+  afterNextRender,
+  ElementRef,
+  ViewChild,
+  OnDestroy,
+  inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import { Subject } from "rxjs";
 
 // PrimeNG
-import { TableModule } from 'primeng/table';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { TableModule } from "primeng/table";
+import { InputTextModule } from "primeng/inputtext";
+import { ButtonModule } from "primeng/button";
+import { TooltipModule } from "primeng/tooltip";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { DialogModule } from "primeng/dialog";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { MessageService, ConfirmationService } from "primeng/api";
 
 // Services & Interfaces
-import { UserService } from 'src/app/services/UserService';
-import { CartService } from '../services/CartService';
-import { ICart } from '../EcommerceInterface';
+import { UserService } from "src/app/services/user";
+import { CartService } from "../services/cart";
+import { ICart } from "../ecommerce.interface";
 
 interface ReceivedCart {
   _id?: string;
@@ -33,34 +43,34 @@ interface ReceivedCart {
 }
 
 @Component({
-    selector: 'app-carts',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        CommonModule,
-        FormsModule,
-        RouterLink,
-        TableModule,
-        InputTextModule,
-        ButtonModule,
-        TooltipModule,
-        ProgressSpinnerModule,
-        DialogModule,
-        ConfirmDialogModule
-    ],
-    templateUrl: './CartsComponent.html',
-    styleUrls: ['./CartsComponent.css'],
-    providers: [MessageService, ConfirmationService]
+  selector: "app-carts",
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    TableModule,
+    InputTextModule,
+    ButtonModule,
+    TooltipModule,
+    ProgressSpinnerModule,
+    DialogModule,
+    ConfirmDialogModule,
+  ],
+  templateUrl: "./carts.html",
+  styleUrls: ["./carts.css"],
+  providers: [MessageService, ConfirmationService],
 })
 export class CartsComponent implements OnInit, OnDestroy {
   carts: ICart[] = [];
   filteredCarts: ICart[] = [];
   loading = false;
-  errorMessage = '';
+  errorMessage = "";
   isAdmin = false;
-  searchText: string = '';
+  searchText: string = "";
   visibleError = false;
-  
-  @ViewChild('cartsTable') cartsTable!: ElementRef<HTMLTableElement>;
+
+  @ViewChild("cartsTable") cartsTable!: ElementRef<HTMLTableElement>;
   private resizeObserver!: ResizeObserver;
   private destroy$ = new Subject<void>();
 
@@ -88,7 +98,6 @@ export class CartsComponent implements OnInit, OnDestroy {
     if (this.isAdmin) {
       this.cartService.getAllCarts().subscribe({
         next: (response: any) => {
-          
           // Extract the array of carts from the response
           let receivedCarts = [];
           if (response && response.success && Array.isArray(response.data)) {
@@ -100,7 +109,7 @@ export class CartsComponent implements OnInit, OnDestroy {
           } else if (response) {
             receivedCarts = [response];
           }
-          
+
           // Map the received data to match the template's expected property names
           this.carts = receivedCarts.map((cart: ReceivedCart) => ({
             IdCart: cart._id || cart.IdCart,
@@ -108,16 +117,16 @@ export class CartsComponent implements OnInit, OnDestroy {
             TotalPrice: cart.totalPrice || cart.TotalPrice || 0,
             Enabled: cart.enabled !== undefined ? cart.enabled : cart.Enabled,
             // Include original data in case it's needed
-            _original: cart
+            _original: cart,
           }));
-          
+
           this.filteredCarts = [...this.carts];
           this.loading = false;
           this.cdr.detectChanges();
         },
         error: (error: any) => {
-          console.error('Error:', error);
-          this.errorMessage = 'Error loading carts';
+          console.error("Error:", error);
+          this.errorMessage = "Error loading carts";
           this.visibleError = true;
           this.loading = false;
           this.cdr.detectChanges();
@@ -127,7 +136,7 @@ export class CartsComponent implements OnInit, OnDestroy {
     } else {
       const userEmail = this.userService.email;
       if (!userEmail) {
-        this.errorMessage = 'No user logged in';
+        this.errorMessage = "No user logged in";
         this.visibleError = true;
         this.loading = false;
         return;
@@ -141,7 +150,7 @@ export class CartsComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: (error: any) => {
-          this.errorMessage = 'Error loading your cart';
+          this.errorMessage = "Error loading your cart";
           this.visibleError = true;
           this.loading = false;
           this.cdr.detectChanges();
@@ -167,7 +176,7 @@ export class CartsComponent implements OnInit, OnDestroy {
 
   // Method to navigate to details
   navigateToCartDetails(userEmail: string) {
-    this.router.navigate(['/cart-details'], {
+    this.router.navigate(["/cart-details"], {
       queryParams: { email: userEmail },
     });
   }
@@ -192,7 +201,7 @@ export class CartsComponent implements OnInit, OnDestroy {
               Enabled: enable,
               TotalPrice: enable ? this.carts[cartIndex].TotalPrice : 0,
             },
-            ...this.carts.slice(cartIndex + 1)
+            ...this.carts.slice(cartIndex + 1),
           ];
           this.filterCarts(); // Refresh the filtered list
         }
@@ -200,8 +209,8 @@ export class CartsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error toggling cart status:', error);
-        this.errorMessage = `Error ${enable ? 'enabling' : 'disabling'} cart`;
+        console.error("Error toggling cart status:", error);
+        this.errorMessage = `Error ${enable ? "enabling" : "disabling"} cart`;
         this.visibleError = true;
         this.loading = false;
       },
@@ -213,48 +222,47 @@ export class CartsComponent implements OnInit, OnDestroy {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
-    
+
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private setupTableResizeObserver(): void {
     if (!this.cartsTable) return;
-    
-    this.resizeObserver = new ResizeObserver(entries => {
-      entries.forEach(entry => {
+
+    this.resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
         this.adjustTableColumns();
       });
     });
-    
+
     this.resizeObserver.observe(this.cartsTable.nativeElement);
   }
 
   private adjustTableColumns(): void {
     if (!this.cartsTable) return;
-    
+
     const table = this.cartsTable.nativeElement;
     const containerWidth = table.offsetWidth;
-    const headers = table.querySelectorAll('th');
-    
+    const headers = table.querySelectorAll("th");
+
     // Adjust widths based on container width
     if (containerWidth < 768) {
       // Mobile view
       headers.forEach((header, index) => {
         if (index > 2) {
-          header.style.display = 'none';
+          header.style.display = "none";
         } else {
-          header.style.display = 'table-cell';
-          header.style.width = index === 0 ? '40%' : '30%';
+          header.style.display = "table-cell";
+          header.style.width = index === 0 ? "40%" : "30%";
         }
       });
     } else {
       // Desktop view
-      headers.forEach(header => {
-        header.style.display = 'table-cell';
-        header.style.width = ''; // Restore default width
+      headers.forEach((header) => {
+        header.style.display = "table-cell";
+        header.style.width = ""; // Restore default width
       });
     }
   }
-
 }

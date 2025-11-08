@@ -1,37 +1,43 @@
-import { Injectable, inject } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router, UrlTree } from '@angular/router';
-import { Observable } from 'rxjs';
-import { jwtDecode } from 'jwt-decode';
-import { ILoginResponse } from '../interfaces/LoginInterface';
-import { UserService } from '../services/UserService';
+import { Injectable, inject } from "@angular/core";
+import {
+  CanActivate,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+  Router,
+  UrlTree,
+} from "@angular/router";
+import { Observable } from "rxjs";
+import { jwtDecode } from "jwt-decode";
+import { ILoginResponse } from "../interfaces/login.interface";
+import { UserService } from "../services/user";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthGuard implements CanActivate {
   private userService = inject(UserService);
-  
+
   constructor(private router: Router) {}
 
   getRole(): string | null {
     try {
       // First check the separate userRole in sessionStorage
-      const userRole = sessionStorage.getItem('userRole');
+      const userRole = sessionStorage.getItem("userRole");
       if (userRole) {
         return userRole;
       }
-      
+
       // Fall back to checking user object
-      const userData = sessionStorage.getItem('user');
+      const userData = sessionStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
         if (user?.role) {
           // Update the separate userRole for faster access
-          sessionStorage.setItem('userRole', user.role);
+          sessionStorage.setItem("userRole", user.role);
           return user.role;
         }
       }
-      
+
       // Try to get from token if available
       const token = this.getToken();
       if (token) {
@@ -39,27 +45,29 @@ export class AuthGuard implements CanActivate {
           const decoded: any = jwtDecode(token);
           if (decoded?.role) {
             // Normalize role to ensure consistent casing
-            const role = decoded.role.charAt(0).toUpperCase() + decoded.role.slice(1).toLowerCase();
-            
+            const role =
+              decoded.role.charAt(0).toUpperCase() +
+              decoded.role.slice(1).toLowerCase();
+
             // Update both user object and separate userRole
             if (userData) {
               const user = JSON.parse(userData);
               user.role = role;
-              sessionStorage.setItem('user', JSON.stringify(user));
+              sessionStorage.setItem("user", JSON.stringify(user));
             }
-            sessionStorage.setItem('userRole', role);
+            sessionStorage.setItem("userRole", role);
             return role;
           }
         } catch (e) {
-          console.error('Error decoding token:', e);
+          console.error("Error decoding token:", e);
         }
       }
-      
+
       // Default to 'User' role if no role is found
-      return 'User';
+      return "User";
     } catch (error) {
-      console.error('Error in getRole:', error);
-      return 'User'; // Default to User role on error
+      console.error("Error in getRole:", error);
+      return "User"; // Default to User role on error
     }
   }
 
@@ -68,119 +76,123 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       return false;
     }
-    
+
     try {
       // Check if the token has expired
       const decoded: any = jwtDecode(token);
       const currentTime = Date.now() / 1000;
-      
+
       if (decoded.exp < currentTime) {
         // Token expired
         this.clearAuthData();
         return false;
       }
-      
+
       // Check if we have user data
-      const userData = sessionStorage.getItem('user');
+      const userData = sessionStorage.getItem("user");
       if (!userData) {
         return false;
       }
-      
+
       // Check if the email in the token matches the stored user data
       let user;
       try {
         user = JSON.parse(userData);
-        if (decoded.email && user.userEmail && decoded.email !== user.userEmail) {
-          console.warn('Email mismatch between token and user data');
+        if (
+          decoded.email &&
+          user.userEmail &&
+          decoded.email !== user.userEmail
+        ) {
+          console.warn("Email mismatch between token and user data");
           this.clearAuthData();
           return false;
         }
       } catch (e) {
-        console.error('Error parsing user data:', e);
+        console.error("Error parsing user data:", e);
         this.clearAuthData();
         return false;
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Error al verificar el token:', error);
+      console.error("Error al verificar el token:", error);
       this.clearAuthData();
       return false;
     }
   }
-  
+
   clearAuthData(): void {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userRole");
   }
-  
+
   logout() {
     this.clearAuthData();
-    this.router.navigate(['/login']);
+    this.router.navigate(["/login"]);
   }
 
   getUserEmail(): string {
     try {
-      const infoUser = sessionStorage.getItem('user');
+      const infoUser = sessionStorage.getItem("user");
       if (infoUser) {
         const userInfo: ILoginResponse = JSON.parse(infoUser);
-        return userInfo.userEmail || userInfo.email || '';
+        return userInfo.userEmail || userInfo.email || "";
       }
     } catch (e) {
-      console.error('Error getting user email:', e);
+      console.error("Error getting user email:", e);
     }
-    return '';
+    return "";
   }
 
   getToken(): string | null {
     try {
       // Try to get token from sessionStorage first
-      const tokenFromStorage = sessionStorage.getItem('token');
-      
+      const tokenFromStorage = sessionStorage.getItem("token");
+
       // If found and valid, return it
-      if (tokenFromStorage && typeof tokenFromStorage === 'string') {
+      if (tokenFromStorage && typeof tokenFromStorage === "string") {
         return this.validateToken(tokenFromStorage);
       }
-      
+
       // If not found, try to get from user object
-      const userData = sessionStorage.getItem('user');
+      const userData = sessionStorage.getItem("user");
       if (userData) {
         try {
           const user = JSON.parse(userData);
           const tokenFromUser = user?.token || user?.accessToken;
-          
-          if (tokenFromUser && typeof tokenFromUser === 'string') {
+
+          if (tokenFromUser && typeof tokenFromUser === "string") {
             // Store token directly for easier access
-            sessionStorage.setItem('token', tokenFromUser);
+            sessionStorage.setItem("token", tokenFromUser);
             return this.validateToken(tokenFromUser);
           }
         } catch (e) {
-          console.error('Error parsing user data:', e);
+          console.error("Error parsing user data:", e);
         }
       }
-      
+
       return null;
     } catch (error) {
-      console.error('Error in getToken:', error);
+      console.error("Error in getToken:", error);
       return null;
     }
   }
-  
+
   private validateToken(token: string): string | null {
     try {
       const decoded: any = jwtDecode(token);
       const currentTime = Date.now() / 1000;
-      
+
       if (decoded.exp && decoded.exp < currentTime) {
-        console.warn('Token expired');
+        console.warn("Token expired");
         this.clearAuthData();
         return null;
       }
-      
+
       return token;
     } catch (e) {
-      console.error('Error validating token:', e);
+      console.error("Error validating token:", e);
       this.clearAuthData();
       return null;
     }
@@ -190,32 +202,33 @@ export class AuthGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean> | boolean {
-    
     if (!this.isLoggedIn()) {
-      console.log('AuthGuard - User not logged in, redirecting to login');
-      this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      console.log("AuthGuard - User not logged in, redirecting to login");
+      this.router.navigate(["/login"], {
+        queryParams: { returnUrl: state.url },
+      });
       return false;
     }
 
     // Check if the route requires administrator role
-    const requiresAdmin = route.data['requiresAdmin'] || false;
-    
+    const requiresAdmin = route.data["requiresAdmin"] || false;
+
     if (requiresAdmin) {
       const isAdmin = this.isAdmin();
-      
+
       if (!isAdmin) {
-        this.router.navigate(['/']);
+        this.router.navigate(["/"]);
         return false;
       }
     }
-    
+
     return true;
   }
 
   isAdmin(): boolean {
     // Delegate to UserService's isAdmin() which now handles all cases
     const isAdmin = this.userService.isAdmin();
-    
+
     return isAdmin;
   }
 
@@ -225,33 +238,33 @@ export class AuthGuard implements CanActivate {
    */
   getUser(): { email: string; role: string } | null {
     try {
-      const userData = sessionStorage.getItem('user');
+      const userData = sessionStorage.getItem("user");
       if (!userData) {
         return null;
       }
-      
+
       const user = JSON.parse(userData);
       const role = this.getRole();
-      
+
       return {
-        email: user.userEmail || user.email || '',
-        role: role || 'User'
+        email: user.userEmail || user.email || "",
+        role: role || "User",
       };
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error("Error getting user info:", error);
       return null;
     }
   }
-  
+
   getCartId(): number | null {
     const token = this.getToken();
     if (token) {
       try {
         const decodedToken: any = jwtDecode(token);
-        const cartId = decodedToken['CartId'];
+        const cartId = decodedToken["CartId"];
         return cartId !== undefined ? Number(cartId) : null;
       } catch (error) {
-        console.error('Error decoding token:', error);
+        console.error("Error decoding token:", error);
         return null;
       }
     }

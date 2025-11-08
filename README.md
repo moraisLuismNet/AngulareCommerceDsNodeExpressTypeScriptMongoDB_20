@@ -8,75 +8,75 @@
 AngulareCommerceDsNodeExpressTypeScriptMongoDB_20/  
 ├───app/  
 │   ├───ecommerce/  
-│   │   ├───AdminOrders/  
-│   │   │   ├───AdminOrdersComponent.css  
-│   │   │   ├───AdminOrdersComponent.html  
-│   │   │   └───AdminOrdersComponent.ts  
-│   │   ├───CartDetails/  
-│   │   │   ├───CartDetailsComponent.css  
-│   │   │   ├───CartDetailsComponent.html  
-│   │   │   └───CartDetailsComponent.ts  
+│   │   ├───admin-orders/  
+│   │   │   ├───admin-orders.css  
+│   │   │   ├───admin-orders.html  
+│   │   │   └───admin-orders.ts  
+│   │   ├───cart-details/  
+│   │   │   ├───cart-details.css  
+│   │   │   ├───cart-details.html  
+│   │   │   └───cart-details.ts  
 │   │   ├───carts/  
-│   │   │   ├───CartsComponent.css  
-│   │   │   ├───CartsComponent.html  
-│   │   │   └───CartsComponent.ts  
+│   │   │   ├───carts.css  
+│   │   │   ├───carts.html  
+│   │   │   └───carts.ts  
 │   │   ├───genres/  
-│   │   │   ├───GenresComponent.html      
-│   │   │   └───GenresComponent.ts  
+│   │   │   ├───genres.html      
+│   │   │   └───genres.ts  
 │   │   ├───groups/  
-│   │   │   ├───GroupsComponent.html      
-│   │   │   └───GroupsComponent.ts  
-│   │   ├───listgroups/  
-│   │   │   ├───ListgroupsComponent.html            
-│   │   │   └───ListgroupsComponent.ts  
-│   │   ├───listrecords/  
-│   │   │   ├───ListrecordsComponent.html      
-│   │   │   └───ListrecordsComponent.ts  
+│   │   │   ├───groups.html      
+│   │   │   └───groups.ts  
+│   │   ├───list-groups/  
+│   │   │   ├───list-groups.html            
+│   │   │   └───list-groups.ts  
+│   │   ├───list-records/  
+│   │   │   ├───list-records.html      
+│   │   │   └───list-records.ts  
 │   │   ├───orders/  
-│   │   │   ├───OrdersComponent.html  
-│   │   │   └───OrdersComponent.ts  
+│   │   │   ├───orders.html  
+│   │   │   └───orders.ts  
 │   │   ├───records/  
-│   │   │   ├───RecordsComponent.css  
-│   │   │   ├───RecordsComponent.html  
-│   │   │   └───RecordsComponent.ts  
+│   │   │   ├───records.css  
+│   │   │   ├───records.html  
+│   │   │   └───records.ts  
 │   │   ├───services/  
-│   │   │   ├───CartService.ts  
-│   │   │   ├───CartDetailService.ts  
-│   │   │   ├───GenresService.ts  
-│   │   │   ├───GroupsService.ts  
-│   │   │   ├───OrderService.ts  
-│   │   │   ├───RecordsService.ts  
-│   │   │   ├───StockService.ts  
-│   │   │   └───UsersService.ts  
+│   │   │   ├───cart.ts  
+│   │   │   ├───cart-detail.ts  
+│   │   │   ├───genres.ts  
+│   │   │   ├───groups.ts  
+│   │   │   ├───order.ts  
+│   │   │   ├───records.ts  
+│   │   │   ├───stock.ts  
+│   │   │   └───users.ts  
 │   │   ├───users/  
-│   │   │   ├───UsersComponent.html  
-│   │   │   └───UsersComponent.ts  
-│   │   ├───EcommerceComponent.html  
-│   │   ├───EcommerceComponent.ts  
-│   │   ├───EcommerceInterface.ts    
+│   │   │   ├───users.html  
+│   │   │   └───users.ts  
+│   │   ├───ecommerce.html  
+│   │   ├───ecommerce.ts  
+│   │   ├───ecommerce.interface.ts    
 │   ├───guards/  
-│   │   └───AuthGuardService.ts  
+│   │   └───auth-guard.ts  
 │   ├───interfaces/  
-│   │   ├───LoginInterface.ts  
-│   │   └───RegisterInterface.ts  
+│   │   ├───login.interface.ts  
+│   │   └───register.interface.ts  
 │   ├───services/  
-│   │   ├───AppService.ts  
-│   │   └───UserService.ts  
+│   │   ├───app.ts  
+│   │   └───user.ts  
 │   ├───shared/  
 │   │   ├───login/  
-│   │   │   ├───LoginComponent.css  
-│   │   │   ├───LoginComponent.html  
-│   │   │   └───LoginComponent.ts  
+│   │   │   ├───login.css  
+│   │   │   ├───login.html  
+│   │   │   └───login.ts  
 │   │   ├───navbar/  
-│   │   │   ├───NavbarComponent.html  
-│   │   │   └───NavbarComponent.ts  
+│   │   │   ├───navbar.html  
+│   │   │   └───navbar.ts  
 │   │   ├───register/  
-│   │   │   ├───RegisterComponent.css  
-│   │   │   ├───RegisterComponent.html  
-│   │   │   └───RegisterComponent.ts  
-│   ├───AppComponent.html    
-│   ├───AppComponent.ts       
-│   └───AppRoutes.ts    
+│   │   │   ├───register.css  
+│   │   │   ├───register.html  
+│   │   │   └───register.ts  
+│   ├───app.html    
+│   ├───app.ts       
+│   └───app.routes.ts    
 ├───environments/  
 │   ├───environment.development.ts  
 │   └───environment.ts  

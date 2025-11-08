@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, map, Observable, of, tap } from 'rxjs';
-import { IUser } from '../EcommerceInterface';
-import { environment } from 'src/environments/environment';
-import { AuthGuard } from '../../guards/AuthGuardService';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { catchError, map, Observable, of, tap } from "rxjs";
+import { IUser } from "../ecommerce.interface";
+import { environment } from "src/environments/environment";
+import { AuthGuard } from "../../guards/auth-guard";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class UsersService {
   private readonly urlAPI = environment.urlAPI;
@@ -22,7 +22,7 @@ export class UsersService {
 
   getUsers(): Observable<IUser[]> {
     const headers = this.getHeaders();
-    
+
     return this.http.get<any>(`${this.urlAPI}users`, { headers }).pipe(
       map((response) => {
         // The backend wraps the users array in a 'data' property
@@ -30,12 +30,12 @@ export class UsersService {
         return users;
       }),
       catchError((error) => {
-        console.error('Error fetching users:', {
+        console.error("Error fetching users:", {
           error: error,
           status: error.status,
           message: error.message,
           url: error.url,
-          headers: error.headers
+          headers: error.headers,
         });
         return of([]);
       })
@@ -45,13 +45,13 @@ export class UsersService {
   deleteUser(email: string): Observable<boolean> {
     const headers = this.getHeaders();
     const url = `${this.urlAPI}users/${encodeURIComponent(email)}`;
-    
-    return this.http.delete(url, { headers, observe: 'response' }).pipe(
-      map(response => {
+
+    return this.http.delete(url, { headers, observe: "response" }).pipe(
+      map((response) => {
         return false;
       }),
-      catchError(error => {
-        console.error('Error deleting user:', error);
+      catchError((error) => {
+        console.error("Error deleting user:", error);
         return of(false);
       })
     );

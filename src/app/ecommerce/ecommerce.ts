@@ -9,7 +9,7 @@ import { Subject } from 'rxjs';
         CommonModule,
         RouterOutlet
     ],
-    templateUrl: './EcommerceComponent.html',
+    templateUrl: './ecommerce.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     styles: [
         `
@@ -19,18 +19,18 @@ import { Subject } from 'rxjs';
       padding: 20px;
       transition: all 0.3s ease;
     }
-    
+
     /* Soft loading effect */
     .fade-in {
       animation: fadeIn 0.5s ease-in;
     }
-    
+
     /* Fade-in animation */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
+
     /* Responsive styles */
     @media (max-width: 768px) {
       .main-content {
@@ -43,9 +43,9 @@ import { Subject } from 'rxjs';
 export class EcommerceComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private resizeObserver!: ResizeObserver;
-  
+
   private elementRef = inject(ElementRef);
-  
+
   constructor() {
     // After the initial render
     afterNextRender(() => {
@@ -82,7 +82,7 @@ export class EcommerceComponent implements OnInit, OnDestroy {
 
   private handleResponsiveLayout(width: number): void {
     const body = document.body;
-    
+
     // Add/remove classes based on screen size
     if (width < 768) {
       body.classList.add('mobile-view');
@@ -120,11 +120,11 @@ export class EcommerceComponent implements OnInit, OnDestroy {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
-    
+
     // Clean up subscriptions
     this.destroy$.next();
     this.destroy$.complete();
-    
+
     // Clean up event listeners
     if (typeof window !== 'undefined') {
       window.removeEventListener('online', () => this.handleOnlineStatusChange(true));
